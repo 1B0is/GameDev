@@ -1,5 +1,6 @@
 package se233.gamedev.exception;
-
-/** TODO: คลาสข้อผิดพลาดพื้นฐานสำหรับกรณีผิดปกติที่เกี่ยวข้องกับเกม */
+/** Base type for game rule failures, handled together at the application boundary. */
 public class GameException extends Exception {
+    public GameException(String message){super(message);}
+    public GameException(String message,Throwable cause){super(message,cause);}
 }
