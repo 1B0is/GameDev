@@ -1,9 +1,5 @@
 package se233.gamedev;
 
-import javafx.application.Application;
-
-public class Launcher {
-    public static void main(String[] args) {
-        Application.launch(HelloApplication.class, args);
-    }
+/** TODO: จุดเริ่มต้นสำหรับเรียกแอปพลิเคชันและใช้เป็น Main-Class ของไฟล์ JAR */
+public final class Launcher {
 }
