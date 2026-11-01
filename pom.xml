@@ -92,7 +92,7 @@
                         <!-- ตั้งค่าจุดเริ่มต้นเมื่อสั่ง mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>se233.gamedev/se233.gamedev.Launcher</mainClass>
+                            <mainClass>se233.gamedev.Launcher</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

@@ -1,17 +1,22 @@
-PATCH FILES FOR D:\SE\Project\GameDev
+SE233 PROJECT II - ARKANOID ROGUELIKE
 
-Copy these paths into the existing project with the same relative paths:
-- src/main/java/se233/gamedev/model/GameSession.java
-- src/main/java/se233/gamedev/model/GameState.java
-- src/main/java/se233/gamedev/model/Stage.java
-- src/main/java/se233/gamedev/model/Upgrade.java
-- src/main/java/se233/gamedev/model/UpgradeType.java
-- src/main/java/se233/gamedev/exception/GameException.java
-- src/main/java/se233/gamedev/exception/InvalidStageException.java
-- src/main/java/se233/gamedev/exception/UpgradeException.java
-- src/main/java/se233/gamedev/util/GameLogger.java
-- src/main/java/se233/gamedev/util/GameErrorHandler.java
-- src/test/java/se233/gamedev/model/GameSessionTest.java
-- src/test/java/se233/gamedev/model/UpgradeSelectionTest.java
+โปรเจกต์นี้เป็นเกม Arkanoid แบบ Roguelike ที่มีหลายด่านและระบบเลือกอัปเกรด
 
-The existing pom.xml already covers Java 21, JavaFX, JUnit, compile/test/package lifecycle, runtime dependency copying and a launcher manifest. No pom.xml or module-info.java change is required; java.logging is already declared. Route game actions through GameErrorHandler.run(action) so all GameException subclasses are caught and logged at one boundary.
+การเล่น:
+- เริ่มเกมจากเมนู
+- ใช้ปุ่มลูกศรหรือ A/D เพื่อเลื่อนไม้พาย
+- กด Space เพื่อปล่อยลูกบอลขึ้นตรง
+- เก็บไอเทมลำแสงด้วยไม้พายเพื่อโจมตีอิฐ
+
+การสร้างและทดสอบ:
+    mvnw.cmd clean test package
+
+เปิดเกมจากไฟล์ JAR:
+    java -jar target/arkanoid-roguelike-1.0-SNAPSHOT.jar
+
+ภาพประกอบอยู่ใน:
+    src/main/resources/se233/gamedev/images
+
+รายการงานที่เสร็จแล้วและงานที่ยังเหลือ:
+    C:\Users\LOQ\Downloads\2026_233_project_II_tracker.md
+    C:\Users\LOQ\Downloads\SE233_ProjectII_Gameplay_and_Sprites_Update.md

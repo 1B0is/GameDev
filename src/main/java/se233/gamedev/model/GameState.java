@@ -1,2 +1,15 @@
 package se233.gamedev.model;
-public enum GameState { READY, PLAYING, UPGRADE, GAME_OVER, VICTORY }
+
+/** สถานะที่ใช้ควบคุมหน้าจอและลำดับการเล่นของเกม */
+public enum GameState {
+    /** รอเริ่มหรือเตรียมเริ่มเกม */
+    READY,
+    /** กำลังเล่นด่าน */
+    PLAYING,
+    /** หยุดเพื่อให้ผู้เล่นเลือกอัปเกรด */
+    UPGRADE,
+    /** ผู้เล่นเสียชีวิตครบจำนวนที่กำหนด */
+    GAME_OVER,
+    /** ผู้เล่นผ่านด่านสุดท้าย */
+    VICTORY
+}
