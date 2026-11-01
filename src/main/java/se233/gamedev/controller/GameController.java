@@ -12,6 +12,7 @@ import se233.gamedev.model.GameSession;
 import se233.gamedev.model.GameState;
 import se233.gamedev.model.Paddle;
 import se233.gamedev.model.UpgradeType;
+import se233.gamedev.util.BeamGeometry;
 import se233.gamedev.util.GameErrorHandler;
 import se233.gamedev.util.GameLogger;
 import se233.gamedev.view.GameRenderer;
@@ -264,10 +265,7 @@ public final class GameController extends BorderPane {
 
     /** สร้างความเสียหายแก่ก้อนอิฐที่แนวลำแสงตัดผ่าน */
     private void fireBeamTick() {
-        double[] beamXs = {
-                paddle.getX() + paddle.getWidth() * 0.25,
-                paddle.getX() + paddle.getWidth() * 0.75
-        };
+        double[] beamXs = BeamGeometry.emitterXPositions(paddle.getX(), paddle.getWidth());
         for (Brick brick : session.getStage().getBricks()) {
             if (brick.isDestroyed()) continue;
             boolean hitByBeam = false;
@@ -324,3 +322,4 @@ public final class GameController extends BorderPane {
         }
     }
 }
+

@@ -61,6 +61,29 @@ class UpgradeSelectionTest {
 
     }
 
+    /** ตรวจว่าการเลือกอัปเกรดเพิ่มตัวคูณความกว้างไม้พายตามค่าที่กำหนด */
+    @Test void appliesWidePaddleMultiplier() throws GameException {
+        GameSession game=findOffer(UpgradeType.WIDE_PADDLE);
+        double before=game.getPaddleWidthMultiplier();
+
+        game.chooseUpgrade(indexOf(game,UpgradeType.WIDE_PADDLE));
+
+        assertEquals(before*UpgradeType.WIDE_PADDLE.getMultiplier(),
+                game.getPaddleWidthMultiplier(),1e-9);
+        assertTrue(game.hasUpgrade(UpgradeType.WIDE_PADDLE));
+    }
+
+    /** ตรวจว่าการเลือกอัปเกรดเพิ่มตัวคูณความเร็วลูกบอลตามค่าที่กำหนด */
+    @Test void appliesQuickBallMultiplier() throws GameException {
+        GameSession game=findOffer(UpgradeType.QUICK_BALL);
+        double before=game.getBallSpeedMultiplier();
+
+        game.chooseUpgrade(indexOf(game,UpgradeType.QUICK_BALL));
+
+        assertEquals(before*UpgradeType.QUICK_BALL.getMultiplier(),
+                game.getBallSpeedMultiplier(),1e-9);
+        assertTrue(game.hasUpgrade(UpgradeType.QUICK_BALL));
+    }
     /** สร้างเซสชันที่มีอัปเกรดชนิดที่ต้องการอยู่ในรายการเสนอ */
     private static GameSession findOffer(UpgradeType type) throws GameException {
         for(long seed=0;seed<100;seed++){

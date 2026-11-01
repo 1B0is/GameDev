@@ -13,10 +13,14 @@ import java.util.Set;
 public final class GameSession {
     public static final int DEFAULT_STAGE_COUNT=5;
     public static final int MAX_UPGRADE_REROLLS=3;
+    private static final int COMBO_STEP=3;
+    private static final int MAX_COMBO_STEPS=5;
+    private static final double COMBO_BONUS_PER_STEP=0.10;
     private final int totalStages;
     private final Random random;
     private final Set<UpgradeType> acquired=EnumSet.noneOf(UpgradeType.class);
     private int score,lives;
+    private int comboStreak;
     private double paddleWidthMultiplier=1.0,scoreMultiplier=1.0,ballSpeedMultiplier=1.0;
     private int rerollsRemaining=MAX_UPGRADE_REROLLS;
     private int additionalBallCount;
@@ -43,19 +47,22 @@ public final class GameSession {
     public int addScore(int basePoints) throws GameException {
         requireState(GameState.PLAYING);
         if(basePoints<0)throw new GameException("Score cannot be negative");
-        int earned=(int)Math.round(basePoints*scoreMultiplier);
+        comboStreak++;
+        int earned=(int)Math.round(basePoints*scoreMultiplier*getComboMultiplier());
         score=Math.addExact(score,earned);GameLogger.scoreEvent(earned,score);return earned;
     }
     /** ลดจำนวนชีวิต และเปลี่ยนเป็นสถานะแพ้เมื่อชีวิตหมด */
     public void loseLife() throws GameException {
         requireState(GameState.PLAYING);
         if(lives>0)lives--;
+        comboStreak=0;
         GameLogger.warning("Player lost a life; remaining="+lives);
         if(lives==0){state=GameState.GAME_OVER;GameLogger.gameEvent("Game over; final score="+score);}
     }
     /** จบด่านปัจจุบัน แล้วเปิดตัวเลือกอัปเกรดหรือจบเกมด้วยชัยชนะ */
     public List<Upgrade> clearStage() throws GameException {
         requireState(GameState.PLAYING);
+        comboStreak=0;
         if(!stage.isFinalStage()){
             offered=generateUpgradeChoices();state=GameState.UPGRADE;
             GameLogger.gameEvent("Stage "+stageNumber+" cleared; upgrade choice opened");
@@ -115,6 +122,13 @@ public final class GameSession {
     private void requireState(GameState expected) throws GameException {
         if(state!=expected)throw new GameException("Expected "+expected+" state but game is "+state);
     }
+    /** คืนจำนวนอิฐที่ทำลายต่อเนื่องในด่านปัจจุบัน */
+    public int getComboStreak(){return comboStreak;}
+    /** คืนตัวคูณคะแนนจากคอมโบ โดยเพิ่ม 10% ทุก 3 อิฐ สูงสุด 50% */
+    public double getComboMultiplier(){
+        int comboSteps=Math.min(comboStreak/COMBO_STEP,MAX_COMBO_STEPS);
+        return 1.0+comboSteps*COMBO_BONUS_PER_STEP;
+    }
     /** คืนค่าคะแนนสะสมของรอบเกม */
     public int getScore(){return score;}
     /** คืนค่าจำนวนชีวิตที่เหลือ */
@@ -144,3 +158,4 @@ public final class GameSession {
     /** ตรวจว่ารอบเกมนี้ได้รับอัปเกรดชนิดที่ระบุแล้วหรือไม่ */
     public boolean hasUpgrade(UpgradeType type){return acquired.contains(type);}
 }
+

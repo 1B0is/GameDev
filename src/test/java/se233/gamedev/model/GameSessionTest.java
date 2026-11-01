@@ -19,6 +19,22 @@ class GameSessionTest {
         assertTrue(idx>=0);game.chooseUpgrade(idx);
         assertEquals(125,game.addScore(100));assertEquals(225,game.getScore());
     }
+    /** ตรวจโบนัสคอมโบทุกสามอิฐและการรีเซ็ตหลังเสียลูกบอล */
+    @Test void comboAddsScoreBonusAndResetsAfterLosingLife() throws GameException {
+        GameSession game=new GameSession(2,2);
+        game.start();
+
+        assertEquals(100,game.addScore(100));
+        assertEquals(100,game.addScore(100));
+        assertEquals(110,game.addScore(100));
+        assertEquals(1.1,game.getComboMultiplier(),1e-9);
+        assertEquals(3,game.getComboStreak());
+
+        game.loseLife();
+        assertEquals(0,game.getComboStreak());
+        assertEquals(1.0,game.getComboMultiplier(),1e-9);
+        assertEquals(100,game.addScore(100));
+    }
     /** ตรวจการลดชีวิตจนแพ้และปฏิเสธคำสั่งที่ไม่ตรงสถานะ */
     @Test void lifeLossReachesGameOver() throws GameException {
         GameSession game=new GameSession(1,2);game.start();game.loseLife();
@@ -37,3 +53,4 @@ class GameSessionTest {
         assertTrue(game.clearStage().isEmpty());assertEquals(GameState.VICTORY,game.getState());
     }
 }
+

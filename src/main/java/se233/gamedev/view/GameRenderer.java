@@ -12,6 +12,7 @@ import se233.gamedev.model.Brick;
 import se233.gamedev.model.BrickType;
 import se233.gamedev.model.GameSession;
 import se233.gamedev.model.GameState;
+import se233.gamedev.util.BeamGeometry;
 
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,11 @@ public final class GameRenderer {
         gc.fillText("STAGE  " + session.getStageNumber() + "/" + session.getTotalStages(), 355, 29);
         gc.setFont(javafx.scene.text.Font.font("Monospaced", 12));
         gc.fillText("REROLL " + session.getRerollsRemaining(), 460, 29);
+        if (session.getComboStreak() >= 3) {
+            gc.setFill(Color.web("#7CFC98"));
+            gc.setFont(javafx.scene.text.Font.font("Monospaced", 10));
+            gc.fillText(String.format("COMBO x%.1f", session.getComboMultiplier()), 460, 42);
+        }
         gc.setFont(javafx.scene.text.Font.font("Monospaced", 9));
         gc.fillText("MOVE: ARROWS / A,D", 530, 19);
         gc.fillText("LAUNCH: SPACE", 530, 35);
@@ -162,8 +168,7 @@ public final class GameRenderer {
     private void drawBeams(GraphicsContext gc, double paddleX, double paddleWidth) {
         double top = HUD_HEIGHT + 4;
         double emitterY = 558;
-        for (double fraction : new double[]{0.08, 0.92}) {
-            double x = paddleX + paddleWidth * fraction;
+        for (double x : BeamGeometry.emitterXPositions(paddleX, paddleWidth)) {
             gc.setFill(Color.web("#168dff"));
             gc.fillRect(x - 5, top, 10, emitterY - top);
             gc.setFill(Color.WHITE);
@@ -228,3 +233,4 @@ public final class GameRenderer {
         return keyed;
     }
 }
+
