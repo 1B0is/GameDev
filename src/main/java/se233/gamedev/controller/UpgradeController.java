@@ -42,14 +42,6 @@ public final class UpgradeController {
     private UpgradeType hoveredOwnedType;
     private AnimationTimer loop;
 
-<<<<<<< HEAD
-=======
-    public UpgradeController(GameSession session,
-                             java.util.function.Consumer<GameSession> onContinue) {
-        this(session, onContinue, null);
-    }
->>>>>>> a6c40d904f8676d65de2ba310f6dd126bdd46456
-
     public UpgradeController(GameSession session,
                              java.util.function.Consumer<GameSession> onContinue,
                              Image gameplayBackdrop) {
