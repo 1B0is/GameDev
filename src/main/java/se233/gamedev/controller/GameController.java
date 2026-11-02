@@ -4,18 +4,30 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
+import javafx.geometry.Pos;
+import javafx.scene.transform.Scale;
 import se233.gamedev.model.Ball;
 import se233.gamedev.model.Brick;
 import se233.gamedev.model.GameSession;
 import se233.gamedev.model.GameState;
+import se233.gamedev.model.GameBounds;
+import se233.gamedev.model.Meteor;
+import se233.gamedev.model.MeteorHitGuard;
+import se233.gamedev.model.MeteorSpawner;
 import se233.gamedev.model.Paddle;
 import se233.gamedev.model.UpgradeType;
+import se233.gamedev.model.WeatherEvent;
+import se233.gamedev.model.WeatherType;
 import se233.gamedev.util.BeamGeometry;
+import se233.gamedev.util.AudioManager;
 import se233.gamedev.util.GameErrorHandler;
 import se233.gamedev.util.GameLogger;
 import se233.gamedev.view.GameRenderer;
+import se233.gamedev.view.WarningPopupState;
+import se233.gamedev.view.ScaleAwareScreen;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,13 +35,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 
 /** รับอินพุตและอัปเดตโมเดล ส่วนการวาดทั้งหมดส่งให้ GameRenderer */
-public final class GameController extends BorderPane {
-    private static final double FIELD_WIDTH = GameRenderer.CANVAS_WIDTH;
-    private static final double FIELD_HEIGHT = GameRenderer.CANVAS_HEIGHT;
+public final class GameController extends BorderPane implements ScaleAwareScreen {
+    private static final double FIELD_WIDTH = GameBounds.FIELD_WIDTH;
+    private static final double FIELD_HEIGHT = GameBounds.FIELD_HEIGHT;
     private static final double GAME_OVER_EXPLOSION_SECONDS = 0.54;
     private static final double BEAM_DAMAGE_SECONDS = 1.5;
     private static final double BEAM_TICK_SECONDS = BEAM_DAMAGE_SECONDS / 10;
@@ -44,6 +57,8 @@ public final class GameController extends BorderPane {
     private final Map<Ball, Set<Brick>> piercingContacts = new HashMap<>();
     private final List<Ball> balls = new ArrayList<>();
     private final List<Point2D> beamDrops = new ArrayList<>();
+    private final List<Meteor> meteors = new ArrayList<>();
+    private final MeteorSpawner meteorSpawner = new MeteorSpawner(new Random());
     private final Paddle paddle;
     private final AnimationTimer loop;
     private long previousFrame;
@@ -51,19 +66,29 @@ public final class GameController extends BorderPane {
     private double beamTickTimer;
     private int beamTicksRemaining;
     private double statusSeconds;
+    private final MeteorHitGuard meteorHitGuard = new MeteorHitGuard();
     private double gameOverAnimationSeconds = -1;
     private String status = "PRESS SPACE TO LAUNCH";
+    private final WarningPopupState weatherPopup;
     private boolean stopped;
+    private double viewportScale = 1;
+    private final Scale canvasCounterScale = new Scale(1, 1, 0, 0);
 
     /** ผูกเซสชันเกมเข้ากับหน้าจอ สร้างวัตถุที่ควบคุม และเริ่มลูปเกม */
     public GameController(GameSession session, Consumer<GameSession> onStateChange) {
         this.session = session;
         this.onStateChange = onStateChange;
         double paddleWidth = 108 * session.getPaddleWidthMultiplier();
-        paddle = new Paddle((FIELD_WIDTH - paddleWidth) / 2, 548,
+        paddle = new Paddle((FIELD_WIDTH - paddleWidth) / 2, GameBounds.PADDLE_Y,
                 paddleWidth, 20, FIELD_WIDTH, 7.5);
+        weatherPopup = session.getWeatherEvent()
+                .filter(WeatherEvent::isActive)
+                .map(ignored -> new WarningPopupState())
+                .orElse(null);
         resetBalls();
         setCenter(canvas);
+        BorderPane.setAlignment(canvas, Pos.TOP_LEFT);
+        canvas.getTransforms().add(canvasCounterScale);
         setStyle("-fx-background-color: #050b1e;");
         setFocusTraversable(true);
         canvas.setFocusTraversable(true);
@@ -77,6 +102,7 @@ public final class GameController extends BorderPane {
                     render();
                     return;
                 }
+
                 double frameScale = Math.min((now - previousFrame) / 16_666_667.0, 2.0);
                 previousFrame = now;
                 update(frameScale);
@@ -88,23 +114,35 @@ public final class GameController extends BorderPane {
         Platform.runLater(canvas::requestFocus);
     }
 
+    /** Resizes the Canvas backing store while retaining logical model coordinates. */
+    @Override
+    public void setViewportScale(double scale) {
+        if (!Double.isFinite(scale) || scale <= 0) return;
+        viewportScale = scale;
+        canvas.setWidth(FIELD_WIDTH * scale);
+        canvas.setHeight(FIELD_HEIGHT * scale);
+        canvasCounterScale.setX(1 / scale);
+        canvasCounterScale.setY(1 / scale);
+    }
+
     /** ลงทะเบียนปุ่มควบคุมและคำสั่งปล่อยลูกบอลกับฉาก JavaFX */
     private void installKeyboard() {
         canvas.sceneProperty().addListener((observable, oldScene, scene) -> {
             if (scene == null) return;
-            scene.setOnKeyPressed(event -> {
-                keysDown.add(event.getCode());
-                if (event.getCode() == KeyCode.SPACE && session.getState() == GameState.PLAYING
-                        && gameOverAnimationSeconds < 0 && !balls.isEmpty()
-                        && !balls.get(0).isLaunched()) {
-                    launchBalls();
-                    status = "";
-                    GameLogger.playerAction("Player launched the ball");
-                }
-            });
-            scene.setOnKeyReleased(event -> keysDown.remove(event.getCode()));
             Platform.runLater(canvas::requestFocus);
         });
+        canvas.setOnKeyPressed(event -> {
+            keysDown.add(event.getCode());
+            if (event.getCode() == KeyCode.SPACE && session.getState() == GameState.PLAYING
+                    && gameOverAnimationSeconds < 0 && !balls.isEmpty()
+                    && !balls.get(0).isLaunched()) {
+                if (weatherPopup != null) weatherPopup.dismiss();
+                launchBalls();
+                status = "";
+                GameLogger.playerAction("Player launched the ball");
+            }
+        });
+        canvas.setOnKeyReleased(event -> keysDown.remove(event.getCode()));
     }
 
     /** ปล่อยลูกบอลทั้งหมดให้เคลื่อนที่ขึ้นตรงตามตัวคูณความเร็วปัจจุบัน */
@@ -129,6 +167,9 @@ public final class GameController extends BorderPane {
             return;
         }
         if (session.getState() != GameState.PLAYING) return;
+        if (weatherPopup != null && weatherPopup.isVisible()) {
+            weatherPopup.update(deltaSeconds);
+        }
 
         if (keysDown.contains(KeyCode.LEFT) || keysDown.contains(KeyCode.A)) {
             paddle.moveLeft(frameScale);
@@ -144,7 +185,10 @@ public final class GameController extends BorderPane {
 
         updateBeamDrops(frameScale);
         updateActiveBeam(deltaSeconds);
+        updateMeteors(deltaSeconds);
+        if (gameOverAnimationSeconds >= 0) return;
         if (session.getState() == GameState.PLAYING && session.getStage().isCleared()) {
+            clearMeteors();
             if (GameErrorHandler.run(session::clearStage)) {
                 stop();
                 onStateChange.accept(session);
@@ -164,7 +208,7 @@ public final class GameController extends BorderPane {
         double centerX = paddle.getX() + paddle.getWidth() / 2 - 7;
         for (int i = 0; i < balls.size(); i++) {
             double offset = (i - (balls.size() - 1) / 2.0) * 18;
-            balls.get(i).reset(centerX + offset, 526);
+            balls.get(i).reset(centerX + offset, GameBounds.BALL_START_Y);
         }
     }
 
@@ -187,7 +231,10 @@ public final class GameController extends BorderPane {
     private void updateBall(Ball ball, double frameScale) {
         ball.move(frameScale);
         ball.bounceOffWalls(8, GameRenderer.HUD_HEIGHT + 8, FIELD_WIDTH - 8, FIELD_HEIGHT);
-        if (ball.bounceOffPaddle(paddle)) GameLogger.playerAction("Ball bounced off paddle");
+        if (ball.bounceOffPaddle(paddle)) {
+            session.resetCombo();
+            GameLogger.playerAction("Ball bounced off paddle");
+        }
 
         Set<Brick> contacts = piercingContacts.computeIfAbsent(ball, ignored -> new HashSet<>());
         contacts.removeIf(brick -> !ball.intersects(brick));
@@ -199,6 +246,7 @@ public final class GameController extends BorderPane {
             } else if (!ball.bounceOffBrick(brick)) {
                 continue;
             }
+            session.recordBrickHit();
             damageBrick(brick, true);
             break;
         }
@@ -207,6 +255,7 @@ public final class GameController extends BorderPane {
     /** ลดพลังชีวิตอิฐ บันทึกคะแนน และสุ่มสร้างไอเทมลำแสงเมื่อเข้าเงื่อนไข */
     private void damageBrick(Brick brick, boolean canDropPowerUp) {
         hitFlashes.put(brick, 0.16);
+        AudioManager.getInstance().playSfx(AudioManager.BRICK_HIT);
         boolean destroyed = brick.hit();
         GameLogger.playerAction(destroyed ? "Brick destroyed" : "Brick hit");
         if (!destroyed) return;
@@ -243,6 +292,50 @@ public final class GameController extends BorderPane {
                 beamDrops.remove(i);
             }
         }
+    }
+
+    /** สร้างอุกกาบาตตามเวลาจำลอง ตรวจชนไม้พาย และใช้ชีวิตครึ่งหน่วยพร้อมช่วงคุ้มกัน */
+    private void updateMeteors(double deltaSeconds) {
+        meteorHitGuard.update(deltaSeconds);
+        WeatherEvent event = session.getWeatherEvent().orElse(null);
+        if (event == null || !event.isActive() || event.getType() != WeatherType.METEOR_SHOWER) {
+            clearMeteors();
+            return;
+        }
+
+        Meteor spawned = meteorSpawner.update(deltaSeconds, FIELD_WIDTH);
+        if (spawned != null) {
+            meteors.add(spawned);
+            GameLogger.playerAction("Meteor spawned at x=" + Math.round(spawned.getX()));
+        }
+        for (int i = meteors.size() - 1; i >= 0; i--) {
+            Meteor meteor = meteors.get(i);
+            meteor.update(deltaSeconds);
+            if (meteor.isBelowField(FIELD_HEIGHT)) {
+                meteors.remove(i);
+            } else if (meteorHitGuard.canBeHit() && meteor.intersects(paddle)) {
+                clearMeteors();
+                meteorHitGuard.start();
+                GameLogger.warning("Meteor hit the paddle; invulnerable for one second");
+                if (!GameErrorHandler.run(session::loseHalfLife)) {
+                    stop();
+                    status = "GAME ERROR - SEE LOG";
+                } else if (session.getState() == GameState.GAME_OVER) {
+                    gameOverAnimationSeconds = 0;
+                    status = "";
+                } else {
+                    status = "METEOR HIT - HALF LIFE LOST";
+                    statusSeconds = 1.5;
+                }
+                return;
+            }
+        }
+    }
+
+    /** ล้างอุกกาบาตที่ยังตกอยู่และเริ่มนับช่วงเกิดใหม่ตั้งแต่ต้น */
+    private void clearMeteors() {
+        meteors.clear();
+        meteorSpawner.reset();
     }
 
     /** นับเวลาการยิงและจ่ายจังหวะความเสียหายของลำแสง */
@@ -287,9 +380,11 @@ public final class GameController extends BorderPane {
             stop();
             status = "GAME ERROR - SEE LOG";
         } else if (session.getState() == GameState.GAME_OVER) {
+            clearMeteors();
             gameOverAnimationSeconds = 0;
             status = "";
         } else {
+            clearMeteors();
             resetBalls();
             status = "LIFE LOST - PRESS SPACE";
         }
@@ -300,18 +395,19 @@ public final class GameController extends BorderPane {
         balls.clear();
         int count = 1 + session.getAdditionalBallCount();
         double width = 108 * session.getPaddleWidthMultiplier();
-        double centerX = (FIELD_WIDTH - width) / 2 + width / 2;
+        double centerX = paddle.getX() + paddle.getWidth() / 2;
         for (int i = 0; i < count; i++) {
             double offset = (i - (count - 1) / 2.0) * 18;
-            balls.add(new Ball(centerX + offset - 7, 526, 14));
+            balls.add(new Ball(centerX + offset - 7, GameBounds.BALL_START_Y, 14));
         }
     }
 
     /** ส่งข้อมูลโมเดลและเอฟเฟกต์ให้ตัววาดเพื่ออัปเดต Canvas */
     private void render() {
-        renderer.draw(canvas, session, balls, paddle.getX(), paddle.getWidth(),
+        renderer.draw(canvas, viewportScale, session, balls, paddle.getX(), paddle.getWidth(),
                 hitFlashes, beamDrops, beamSeconds, gameOverAnimationSeconds,
-                status);
+                status, meteors, session.getWeatherEvent().orElse(null),
+                weatherPopup, meteorHitGuard.isInvulnerable());
     }
 
     /** หยุดลูปแอนิเมชันโดยไม่หยุดซ้ำเมื่อถูกเรียกหลายครั้ง */
@@ -321,5 +417,9 @@ public final class GameController extends BorderPane {
             stopped = true;
         }
     }
-}
 
+    /** Captures the last gameplay frame for the between-stage backdrop. */
+    public WritableImage snapshotGameplay() {
+        return canvas.snapshot(null, null);
+    }
+}

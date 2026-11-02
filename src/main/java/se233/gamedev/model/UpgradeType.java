@@ -15,7 +15,20 @@ public enum UpgradeType {
     /** คืนชื่ออัปเกรดที่แสดงในส่วนติดต่อผู้เล่น */
     public String getDisplayName(){return displayName;}
     /** คืนคำอธิบายผลการทำงานของอัปเกรด */
-    public String getDescription(){return description;}
+    public String getDescription(){
+        return switch (this) {
+            case WIDE_PADDLE -> "Paddle width +" + percentage(multiplier) + "%";
+            case EXTRA_LIFE -> "Gain one life";
+            case POWER_BALL -> "Brick score +" + percentage(multiplier) + "%";
+            case QUICK_BALL -> "Ball speed +" + percentage(multiplier) + "%";
+            case MULTI_BALL -> "Start each stage with an additional ball";
+            case PIERCING_BALL -> "Ball passes through bricks";
+        };
+    }
     /** คืนค่าตัวคูณที่ใช้ปรับความสามารถของเกม */
     public double getMultiplier(){return multiplier;}
+    /** Derives the displayed bonus percentage from this upgrade's gameplay multiplier. */
+    private static int percentage(double multiplier) {
+        return (int) Math.round((multiplier - 1) * 100);
+    }
 }

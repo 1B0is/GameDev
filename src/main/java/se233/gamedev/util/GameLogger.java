@@ -15,6 +15,12 @@ public final class GameLogger {
     public static void scoreEvent(int delta,int total){LOG.fine("Score change +"+delta+"; total="+total);}
     /** บันทึกสถานการณ์เตือน เช่น การเสียชีวิต */
     public static void warning(String message){LOG.warning(message);}
+    /** บันทึกความล้มเหลวจากระบบเสียงหรือการทำงานภายนอกพร้อม stack trace */
+    public static void error(String message, Throwable exception){
+        LOG.log(Level.SEVERE,message,exception);
+    }
+    /** บันทึกข้อผิดพลาดที่ไม่มีข้อยกเว้นประกอบ */
+    public static void error(String message){LOG.severe(message);}
     /** บันทึกข้อยกเว้นเกมพร้อมรายละเอียดและ stack trace */
     public static void handle(GameException exception){LOG.log(Level.SEVERE,exception.getMessage(),exception);}
 }

@@ -2,37 +2,134 @@ package se233.gamedev.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+
 /** เก็บรูปแบบอิฐ เป้าหมายการทำลาย และสถานะความคืบหน้าของด่านหนึ่ง */
 public final class Stage {
+    public static final int COLUMNS = 12;
+    public static final int BASE_ROWS = 3;
+    public static final int ROWS_PER_STAGE = 1;
+    public static final double BRICK_WIDTH = 54;
+    public static final double BRICK_HEIGHT = 24;
+    public static final double COLUMN_SPACING = 62;
+    public static final double ROW_SPACING = 34;
+    private static final double BONUS_CHANCE = 0.08;
+
     private final int number;
     private final int totalStages;
     private final int brickGoal;
     private final List<Brick> bricks;
     private int bricksDestroyed;
+
     /** สร้างด่านตามหมายเลขและจำนวนด่านทั้งหมด พร้อมสร้างตำแหน่งและชนิดอิฐ */
     public Stage(int number,int totalStages){
-        if(totalStages<1||number<1||number>totalStages)throw new IllegalArgumentException("Stage number must be within 1..totalStages");
-        this.number=number;this.totalStages=totalStages;this.brickGoal=10+(number-1)*2;
-        this.bricks=buildBricks();
+        this(number, totalStages, new Random());
     }
-    /** สร้างผังอิฐโดยเพิ่มจำนวนและระดับความแข็งตามความยากของด่าน */
-    private List<Brick> buildBricks(){
-        List<Brick> layout=new ArrayList<>();
-        int columns=10;
-        for(int i=0;i<brickGoal;i++){
-            int row=i/columns,column=i%columns;
-            BrickType type;
-            if(number>1&&(row+column)%4==0)type=BrickType.STRONG;
-            else if((row*columns+column)%7==0)type=BrickType.BONUS;
-            else type=BrickType.NORMAL;
-            layout.add(new Brick(74+column*65,112+row*34,54,24,type));
+
+    /** สร้างด่านโดยใช้ตัวสุ่มที่กำหนด เพื่อให้รูปแบบและชนิดอิฐทำซ้ำได้ในการทดสอบ */
+    public Stage(int number, int totalStages, Random random) {
+        if (totalStages < 1 || number < 1 || number > totalStages) {
+            throw new IllegalArgumentException("Stage number must be within 1..totalStages");
         }
+        this.number = number;
+        this.totalStages = totalStages;
+        this.bricks = buildBricks(java.util.Objects.requireNonNull(random, "random"));
+        this.brickGoal = bricks.size();
+    }
+
+    /** สร้างผังอิฐจากรูปแบบที่สุ่มได้ โดยทุกอิฐอยู่ในแถวที่เข้าถึงได้จากด้านบน */
+    private List<Brick> buildBricks(Random random) {
+        int rows = BASE_ROWS + (number - 1) * ROWS_PER_STAGE;
+        Pattern pattern = number == 1
+                ? Pattern.SOLID
+                : Pattern.values()[random.nextInt(Pattern.values().length)];
+        List<Brick> layout = new ArrayList<>();
+        double startX = (GameBounds.FIELD_WIDTH
+                - (COLUMNS * BRICK_WIDTH + (COLUMNS - 1) * (COLUMN_SPACING - BRICK_WIDTH))) / 2;
+        for (int row = 0; row < rows; row++) {
+            boolean rowHasBrick = false;
+            for (int column = 0; column < COLUMNS; column++) {
+                if (!pattern.contains(row, column, rows, random, number)) continue;
+                rowHasBrick = true;
+                BrickType type = chooseBrickType(random, row, column);
+                layout.add(new Brick(startX + column * COLUMN_SPACING,
+                        GameBounds.BRICK_START_Y + row * ROW_SPACING,
+                        BRICK_WIDTH, BRICK_HEIGHT, type));
+            }
+            if (!rowHasBrick) {
+                int column = random.nextInt(COLUMNS);
+                layout.add(new Brick(startX + column * COLUMN_SPACING,
+                        GameBounds.BRICK_START_Y + row * ROW_SPACING,
+                        BRICK_WIDTH, BRICK_HEIGHT, BrickType.NORMAL));
+            }
+        }
+        addStageStrongBricks(layout, random);
         return layout;
     }
+
+    /** สุ่มอิฐโบนัสและกำหนดจำนวนอิฐแข็งให้เพิ่มตามหมายเลขด่าน */
+    private BrickType chooseBrickType(Random random, int row, int column) {
+        if ((row + column) % 7 == 0 && random.nextDouble() < BONUS_CHANCE) {
+            return BrickType.BONUS;
+        }
+        return BrickType.NORMAL;
+    }
+
+    /** แปลงอิฐปกติจำนวนด่านลบหนึ่งให้เป็นอิฐแข็ง โดยสลับตำแหน่งแบบสุ่ม */
+    private void addStageStrongBricks(List<Brick> layout, Random random) {
+        List<Integer> candidates = new ArrayList<>();
+        for (int i = 0; i < layout.size(); i++) {
+            if (layout.get(i).getType() == BrickType.NORMAL) candidates.add(i);
+        }
+        Collections.shuffle(candidates, random);
+        int strongCount = Math.min(number - 1, candidates.size());
+        for (int i = 0; i < strongCount; i++) {
+            int index = candidates.get(i);
+            Brick brick = layout.get(index);
+            layout.set(index, new Brick(brick.getX(), brick.getY(), brick.getWidth(),
+                    brick.getHeight(), BrickType.STRONG));
+        }
+    }
+
+    /** รูปแบบผังที่เว้นช่องได้ แต่ไม่สร้างอิฐที่ถูกปิดล้อม */
+    private enum Pattern {
+        SOLID {
+            @Override boolean contains(int row, int column, int rows, Random random, int stage) {
+                return true;
+            }
+        },
+        CHECKERBOARD {
+            @Override boolean contains(int row, int column, int rows, Random random, int stage) {
+                return row == 0 || (row + column) % 2 == 0;
+            }
+        },
+        PYRAMID {
+            @Override boolean contains(int row, int column, int rows, Random random, int stage) {
+                return Math.abs(column - (COLUMNS - 1) / 2.0) <= row + 1;
+            }
+        },
+        GAPPED_COLUMNS {
+            @Override boolean contains(int row, int column, int rows, Random random, int stage) {
+                return column % Math.max(2, 5 - Math.min(stage, 3)) != 0 || row % 2 == 0;
+            }
+        },
+        RANDOM_SCATTER {
+            @Override boolean contains(int row, int column, int rows, Random random, int stage) {
+                return random.nextDouble() < Math.min(0.92, 0.62 + stage * 0.05);
+            }
+        };
+
+        abstract boolean contains(int row, int column, int rows, Random random, int stage);
+    }
+
     /** คืนหมายเลขด่านปัจจุบัน */
     public int getNumber(){return number;}
     /** คืนจำนวนด่านทั้งหมด */
     public int getTotalStages(){return totalStages;}
+    /** คืนจำนวนแถวที่ใช้สร้างรูปแบบของด่าน */
+    public int getRows(){return BASE_ROWS + (number - 1) * ROWS_PER_STAGE;}
+    /** คืนจำนวนคอลัมน์ของผังอิฐ */
+    public int getColumns(){return COLUMNS;}
     /** คืนจำนวนอิฐที่ต้องทำลายในด่านนี้ */
     public int getBrickGoal(){return brickGoal;}
     /** คืนจำนวนอิฐที่ถูกบันทึกว่าทำลายแล้ว */

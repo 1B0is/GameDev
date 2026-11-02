@@ -9,17 +9,20 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.Optional;
 /** จัดการคะแนน ชีวิต สถานะการเล่น ความคืบหน้าด่าน และการเลือกอัปเกรดตลอดหนึ่งรอบเกม */
 public final class GameSession {
     public static final int DEFAULT_STAGE_COUNT=5;
     public static final int MAX_UPGRADE_REROLLS=3;
+    public static final double WEATHER_CHANCE_PER_STAGE=0.3;
     private static final int COMBO_STEP=3;
     private static final int MAX_COMBO_STEPS=5;
     private static final double COMBO_BONUS_PER_STEP=0.10;
     private final int totalStages;
     private final Random random;
     private final Set<UpgradeType> acquired=EnumSet.noneOf(UpgradeType.class);
-    private int score,lives;
+    private int score;
+    private double lives;
     private int comboStreak;
     private double paddleWidthMultiplier=1.0,scoreMultiplier=1.0,ballSpeedMultiplier=1.0;
     private int rerollsRemaining=MAX_UPGRADE_REROLLS;
@@ -28,6 +31,7 @@ public final class GameSession {
     private GameState state=GameState.READY;
     private List<Upgrade> offered=List.of();
     private Stage stage;
+    private WeatherEvent weatherEvent;
     /** สร้างรอบเกมด้วยจำนวนชีวิตเริ่มต้นและจำนวนด่านมาตรฐาน */
     public GameSession(){this(3,DEFAULT_STAGE_COUNT,new Random());}
     /** สร้างรอบเกมโดยกำหนดจำนวนชีวิตและด่าน พร้อมสุ่มอัปเกรดแบบทั่วไป */
@@ -36,33 +40,55 @@ public final class GameSession {
     public GameSession(int startingLives,int totalStages,Random random){
         if(startingLives<1)throw new IllegalArgumentException("Starting lives must be positive");
         if(totalStages<1)throw new IllegalArgumentException("Total stages must be positive");
-        this.lives=startingLives;this.totalStages=totalStages;this.random=random;this.stage=new Stage(1,totalStages);
+        this.lives=startingLives;this.totalStages=totalStages;this.random=random;
+        this.stage=new Stage(1,totalStages,random);
     }
     /** เปลี่ยนสถานะจากเตรียมพร้อมเป็นกำลังเล่น */
     public void start() throws GameException {
         requireState(GameState.READY);state=GameState.PLAYING;
+        rollWeatherForStage();
         GameLogger.gameEvent("Game started: lives="+lives+", stages="+totalStages);
     }
     /** เพิ่มคะแนนตามตัวคูณอัปเกรดและคืนจำนวนคะแนนที่ได้รับจริง */
     public int addScore(int basePoints) throws GameException {
         requireState(GameState.PLAYING);
         if(basePoints<0)throw new GameException("Score cannot be negative");
-        comboStreak++;
-        int earned=(int)Math.round(basePoints*scoreMultiplier*getComboMultiplier());
+        double weatherMultiplier = weatherEvent == null ? 1.0 : weatherEvent.getScoreMultiplier();
+        int earned=(int)Math.round(basePoints*scoreMultiplier*getComboMultiplier()*weatherMultiplier);
         score=Math.addExact(score,earned);GameLogger.scoreEvent(earned,score);return earned;
     }
+    /** เพิ่มคอมโบเมื่อบอลชนอิฐ โดยใช้เป็นตัวคูณกับคะแนนที่ได้ครั้งถัดไป */
+    public void recordBrickHit() {
+        comboStreak++;
+    }
+
+    /** รีเซ็ตคอมโบเมื่อบอลกลับมาโดนไม้พาย */
+    public void resetCombo() {
+        comboStreak=0;
+    }
+
     /** ลดจำนวนชีวิต และเปลี่ยนเป็นสถานะแพ้เมื่อชีวิตหมด */
     public void loseLife() throws GameException {
         requireState(GameState.PLAYING);
-        if(lives>0)lives--;
+        lives=Math.max(0,lives-1);
         comboStreak=0;
         GameLogger.warning("Player lost a life; remaining="+lives);
-        if(lives==0){state=GameState.GAME_OVER;GameLogger.gameEvent("Game over; final score="+score);}
+        if(lives<=0){state=GameState.GAME_OVER;endWeather();GameLogger.gameEvent("Game over; final score="+score);}
+    }
+
+    /** ลดชีวิตครึ่งหน่วยเมื่อถูกอุกกาบาต โดยยังใช้กฎเกมโอเวอร์เดียวกับชีวิตเต็ม */
+    public void loseHalfLife() throws GameException {
+        requireState(GameState.PLAYING);
+        lives=Math.max(0,lives-0.5);
+        comboStreak=0;
+        GameLogger.warning("Meteor hit; player lost half a life; remaining="+lives);
+        if(lives<=0){state=GameState.GAME_OVER;endWeather();GameLogger.gameEvent("Game over; final score="+score);}
     }
     /** จบด่านปัจจุบัน แล้วเปิดตัวเลือกอัปเกรดหรือจบเกมด้วยชัยชนะ */
     public List<Upgrade> clearStage() throws GameException {
         requireState(GameState.PLAYING);
         comboStreak=0;
+        endWeather();
         if(!stage.isFinalStage()){
             offered=generateUpgradeChoices();state=GameState.UPGRADE;
             GameLogger.gameEvent("Stage "+stageNumber+" cleared; upgrade choice opened");
@@ -86,8 +112,9 @@ public final class GameSession {
         if(choiceIndex<0||choiceIndex>=offered.size())throw new UpgradeException("Upgrade choice is outside the offered list");
         apply(offered.get(choiceIndex).getType());
         stageNumber++;
-        try{stage=new Stage(stageNumber,totalStages);}catch(IllegalArgumentException ex){throw new InvalidStageException(ex.getMessage());}
+        try{stage=new Stage(stageNumber,totalStages,random);}catch(IllegalArgumentException ex){throw new InvalidStageException(ex.getMessage());}
         offered=List.of();state=GameState.PLAYING;
+        rollWeatherForStage();
         GameLogger.gameEvent("Upgrade applied; advanced to stage "+stageNumber);
     }
     /** สร้างตัวเลือกอัปเกรดโดยไม่มีชนิดที่ต้องกันออกเพิ่มเติม */
@@ -122,6 +149,23 @@ public final class GameSession {
     private void requireState(GameState expected) throws GameException {
         if(state!=expected)throw new GameException("Expected "+expected+" state but game is "+state);
     }
+    /** สุ่มสภาพอากาศของด่านปัจจุบันและบันทึกเหตุการณ์ที่เริ่ม */
+    private void rollWeatherForStage() {
+        weatherEvent=WeatherEvent.roll(random,WEATHER_CHANCE_PER_STAGE).orElse(null);
+        if(weatherEvent!=null) {
+            GameLogger.gameEvent("Weather started: "+weatherEvent.getType()+" on stage "+stageNumber);
+        } else {
+            GameLogger.gameEvent("No weather event on stage "+stageNumber);
+        }
+    }
+
+    /** ปิดสภาพอากาศของด่านและบันทึกเหตุการณ์สิ้นสุด */
+    private void endWeather() {
+        if(weatherEvent!=null&&weatherEvent.isActive()) {
+            weatherEvent.end();
+            GameLogger.gameEvent("Weather ended: "+weatherEvent.getType()+" on stage "+stageNumber);
+        }
+    }
     /** คืนจำนวนอิฐที่ทำลายต่อเนื่องในด่านปัจจุบัน */
     public int getComboStreak(){return comboStreak;}
     /** คืนตัวคูณคะแนนจากคอมโบ โดยเพิ่ม 10% ทุก 3 อิฐ สูงสุด 50% */
@@ -132,7 +176,7 @@ public final class GameSession {
     /** คืนค่าคะแนนสะสมของรอบเกม */
     public int getScore(){return score;}
     /** คืนค่าจำนวนชีวิตที่เหลือ */
-    public int getLives(){return lives;}
+    public double getLives(){return lives;}
     /** คืนค่าหมายเลขด่านปัจจุบัน */
     public int getStageNumber(){return stageNumber;}
     /** คืนค่าจำนวนด่านทั้งหมดของรอบ */
@@ -157,5 +201,10 @@ public final class GameSession {
     public int getAdditionalBallCount(){return additionalBallCount;}
     /** ตรวจว่ารอบเกมนี้ได้รับอัปเกรดชนิดที่ระบุแล้วหรือไม่ */
     public boolean hasUpgrade(UpgradeType type){return acquired.contains(type);}
+    /** คืนเหตุการณ์อากาศของด่าน หรือค่าว่างเมื่อด่านนี้ไม่มีเหตุการณ์ */
+    public Optional<WeatherEvent> getWeatherEvent(){return Optional.ofNullable(weatherEvent);}
+    /** คืนตัวคูณคะแนนจากสภาพอากาศที่ยังทำงานอยู่ */
+    public double getWeatherScoreMultiplier(){
+        return weatherEvent==null?1.0:weatherEvent.getScoreMultiplier();
+    }
 }
-

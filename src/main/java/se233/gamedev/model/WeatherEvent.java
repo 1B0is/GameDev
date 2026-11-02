@@ -1,0 +1,54 @@
+package se233.gamedev.model;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
+
+/** สถานะเหตุการณ์อากาศของด่าน รวมชนิด ความทำงาน และตัวคูณคะแนน */
+public final class WeatherEvent {
+    public static final double SCORE_MULTIPLIER = 1.25;
+    private final WeatherType type;
+    private boolean active;
+
+    private WeatherEvent(WeatherType type, boolean active) {
+        this.type = type;
+        this.active = active;
+    }
+
+    /** สุ่มเหตุการณ์ตามโอกาสที่กำหนดและสุ่มชนิดเมื่อเกิดเหตุการณ์ */
+    public static Optional<WeatherEvent> roll(Random random, double probability) {
+        Objects.requireNonNull(random, "random");
+        if (probability < 0 || probability > 1) {
+            throw new IllegalArgumentException("Weather probability must be between 0 and 1");
+        }
+
+        if (random.nextDouble() >= probability) return Optional.empty();
+        WeatherType[] types = WeatherType.values();
+        return Optional.of(new WeatherEvent(types[random.nextInt(types.length)], true));
+    }
+
+    /** สร้างเหตุการณ์ที่กำหนดชนิดโดยตรงสำหรับทดสอบกฎคะแนนและสถานะ */
+    public static WeatherEvent active(WeatherType type) {
+        return new WeatherEvent(Objects.requireNonNull(type, "type"), true);
+    }
+
+    /** คืนชนิดเหตุการณ์ที่สุ่มได้ */
+    public WeatherType getType() {
+        return type;
+    }
+
+    /** ตรวจว่าเหตุการณ์ยังมีผลอยู่หรือไม่ */
+    public boolean isActive() {
+        return active;
+    }
+
+    /** คืนตัวคูณคะแนนเมื่อเหตุการณ์ทำงาน หรือหนึ่งเมื่อเหตุการณ์จบแล้ว */
+    public double getScoreMultiplier() {
+        return active ? SCORE_MULTIPLIER : 1.0;
+    }
+
+    /** จบเหตุการณ์ปัจจุบันโดยคงชนิดไว้สำหรับบันทึกสถานะ/ข้อความ */
+    public void end() {
+        active = false;
+    }
+}
