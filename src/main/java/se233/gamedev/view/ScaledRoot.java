@@ -68,11 +68,6 @@ public final class ScaledRoot extends Pane {
         updateScale();
     }
 
-    /** Returns the logical screen container for screen-level content management. */
-    public Pane getLogicalLayer() {
-        return logicalLayer;
-    }
-
     private void updateScale() {
         ScreenScale fit = ScreenScale.compute(Math.max(1, getWidth()), Math.max(1, getHeight()),
                 LOGICAL_WIDTH, LOGICAL_HEIGHT);

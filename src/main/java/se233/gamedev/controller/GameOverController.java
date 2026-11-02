@@ -48,7 +48,7 @@ public final class GameOverController {
         draw(canvas.getGraphicsContext2D());
         return root;
     }
-
+    /* วาด menu , title, แถบเสียง, ดาว , scanlines*/
     private void draw(GraphicsContext gc) {
         boolean won = session.getState() == GameState.VICTORY;
         gc.setImageSmoothing(false);
