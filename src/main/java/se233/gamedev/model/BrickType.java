@@ -15,8 +15,6 @@ public enum BrickType {
         this.score = score;
     }
 
-    /** คืนค่าพลังชีวิตเริ่มต้นของอิฐชนิดนี้ */
     public int getHitPoints() { return hitPoints; }
-    /** คืนค่าคะแนนที่ได้เมื่อทำลายอิฐชนิดนี้ */
     public int getScore() { return score; }
 }

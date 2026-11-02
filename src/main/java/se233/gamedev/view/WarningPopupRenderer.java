@@ -22,7 +22,6 @@ public final class WarningPopupRenderer {
     private static final double STRIPE_HEIGHT = 9;
     private static final double STRIPE_WIDTH = 18;
 
-    /** ป้องกันการสร้างตัววาดโดยตรง เนื่องจากใช้เมธอดแบบ static */
     private WarningPopupRenderer() {
     }
 

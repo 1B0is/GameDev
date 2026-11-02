@@ -30,7 +30,6 @@ public final class MeteorSpawner {
         elapsedSeconds = 0;
     }
 
-    /** คืนเวลาที่สะสมไว้สำหรับตรวจสอบการสร้างอุกกาบาต */
     public double getElapsedSeconds() {
         return elapsedSeconds;
     }

@@ -84,7 +84,6 @@ class UpgradeSelectionTest {
                 game.getBallSpeedMultiplier(),1e-9);
         assertTrue(game.hasUpgrade(UpgradeType.QUICK_BALL));
     }
-    /** สร้างเซสชันที่มีอัปเกรดชนิดที่ต้องการอยู่ในรายการเสนอ */
     private static GameSession findOffer(UpgradeType type) throws GameException {
         for(long seed=0;seed<100;seed++){
             GameSession game=new GameSession(2,3,new java.util.Random(seed));
@@ -97,7 +96,6 @@ class UpgradeSelectionTest {
         throw new AssertionError();
     }
 
-    /** ค้นหาดัชนีของอัปเกรดชนิดที่ต้องการในรายการเสนอ */
     private static int indexOf(GameSession game,UpgradeType type){
         return game.getOfferedUpgrades().stream().map(Upgrade::getType).toList().indexOf(type);
     }

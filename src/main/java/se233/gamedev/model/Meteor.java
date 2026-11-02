@@ -10,7 +10,6 @@ public final class Meteor extends GameObject {
         super(centerX - WIDTH / 2, startY, WIDTH, HEIGHT);
     }
 
-    /** คืนความเร็วแนวตั้งของอุกกาบาต */
     public double getVelocityY() {
         return FALL_SPEED;
     }
@@ -21,7 +20,6 @@ public final class Meteor extends GameObject {
         setY(getY() + FALL_SPEED * dtSeconds);
     }
 
-    /** ตรวจว่าตัวอุกกาบาตหลุดพ้นขอบล่างของสนามแล้วหรือไม่ */
     public boolean isBelowField(double fieldHeight) {
         return getY() > fieldHeight;
     }

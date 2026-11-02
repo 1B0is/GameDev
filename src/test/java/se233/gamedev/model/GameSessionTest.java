@@ -21,7 +21,7 @@ class GameSessionTest {
         assertTrue(idx>=0);game.chooseUpgrade(idx);
         assertEquals(125,game.addScore(100));assertEquals(225,game.getScore());
     }
-    /** ตรวจโบนัสคอมโบทุกสามอิฐและการรีเซ็ตหลังเสียลูกบอล */
+    /** ตรวจโบนัสคอมโบทุกสามอิฐและการรีเซ็ตหลังเสียชีวิต */
     @Test void comboAddsScoreBonusAndResetsAfterLosingLife() throws GameException {
         GameSession game=null;
         for(long seed=0;seed<100&&game==null;seed++) {

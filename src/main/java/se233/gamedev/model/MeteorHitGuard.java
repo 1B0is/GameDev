@@ -21,7 +21,6 @@ public final class MeteorHitGuard {
         return remainingSeconds <= 0;
     }
 
-    /** ตรวจว่าช่วงคุ้มกันยังทำงานอยู่หรือไม่ */
     public boolean isInvulnerable() {
         return !canBeHit();
     }

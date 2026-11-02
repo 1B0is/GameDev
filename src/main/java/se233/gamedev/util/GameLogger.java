@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 /** จุดรวมบันทึกเหตุการณ์ การกระทำ คะแนน คำเตือน และข้อผิดพลาดของเกม */
 public final class GameLogger {
     private static final Logger LOG=Logger.getLogger("se233.gamedev");
-    /** ป้องกันการสร้างตัวบันทึกที่เรียกใช้ผ่านเมธอดสถิติเท่านั้น */
     private GameLogger(){}
     /** บันทึกเหตุการณ์สำคัญของเกมในระดับข้อมูล */
     public static void gameEvent(String message){LOG.info(message);}

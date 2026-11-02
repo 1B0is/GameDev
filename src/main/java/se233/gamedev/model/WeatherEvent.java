@@ -34,17 +34,15 @@ public final class WeatherEvent {
         return new WeatherEvent(Objects.requireNonNull(type, "type"), true);
     }
 
-    /** คืนชนิดเหตุการณ์ที่สุ่มได้ */
     public WeatherType getType() {
         return type;
     }
 
-    /** ตรวจว่าเหตุการณ์ยังมีผลอยู่หรือไม่ */
     public boolean isActive() {
         return active;
     }
 
-    /** คืนตัวคูณคะแนนเมื่อเหตุการณ์ทำงาน หรือหนึ่งเมื่อเหตุการณ์จบแล้ว */
+    /** Returns the weather multiplier only while this event is active. */
     public double getScoreMultiplier() {
         return active ? SCORE_MULTIPLIER : 1.0;
     }

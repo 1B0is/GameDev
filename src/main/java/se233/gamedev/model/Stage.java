@@ -122,20 +122,14 @@ public final class Stage {
         abstract boolean contains(int row, int column, int rows, Random random, int stage);
     }
 
-    /** คืนจำนวนด่านทั้งหมด */
     public int getTotalStages(){return totalStages;}
-    /** คืนจำนวนแถวที่ใช้สร้างรูปแบบของด่าน */
     public int getRows(){return BASE_ROWS + (number - 1) * ROWS_PER_STAGE;}
-    /** คืนจำนวนคอลัมน์ของผังอิฐ */
     public int getColumns(){return COLUMNS;}
-    /** คืนจำนวนอิฐที่ต้องทำลายในด่านนี้ */
     public int getBrickGoal(){return brickGoal;}
-    /** คืนรายการอิฐที่ไม่อนุญาตให้แก้ไขโครงสร้างรายการจากภายนอก */
+    /** Prevents callers from changing the stage's brick collection. */
     public List<Brick> getBricks(){return Collections.unmodifiableList(bricks);}
     /** บันทึกการทำลายอิฐหนึ่งก้อนและคืน false หากเป้าหมายครบแล้ว */
     public boolean recordBrickDestroyed(){if(bricksDestroyed>=brickGoal)return false;bricksDestroyed++;return true;}
-    /** ตรวจว่าทำลายอิฐครบตามเป้าหมายของด่านแล้วหรือไม่ */
     public boolean isCleared(){return bricksDestroyed>=brickGoal;}
-    /** ตรวจว่าด่านนี้เป็นด่านสุดท้ายของรอบหรือไม่ */
     public boolean isFinalStage(){return number==totalStages;}
 }

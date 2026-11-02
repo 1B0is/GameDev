@@ -32,21 +32,14 @@ public final class AudioSettings {
         sfxMuted = preferences.getBoolean(SFX_MUTED, false);
     }
 
-    /** Returns the current music level from zero to ten. */
     public int getBgmVolume() { return bgmVolume; }
-    /** Returns the current effects level from zero to ten. */
     public int getSfxVolume() { return sfxVolume; }
-    /** Returns whether music is muted. */
     public boolean isBgmMuted() { return bgmMuted; }
-    /** Returns whether effects are muted. */
     public boolean isSfxMuted() { return sfxMuted; }
-    /** Returns the effective music volume from zero to one. */
+    /** Volume after applying mute, normalized to JavaFX's 0..1 scale. */
     public double getEffectiveBgmVolume() { return bgmMuted ? 0 : bgmVolume / 10.0; }
-    /** Returns the effective effects volume from zero to one. */
     public double getEffectiveSfxVolume() { return sfxMuted ? 0 : sfxVolume / 10.0; }
-    /** Sets and persists the music level after clamping it to zero through ten. */
     public void setBgmVolume(int volume) { bgmVolume = clamp(volume); persist(BGM_VOLUME, bgmVolume); }
-    /** Sets and persists the effects level after clamping it to zero through ten. */
     public void setSfxVolume(int volume) { sfxVolume = clamp(volume); persist(SFX_VOLUME, sfxVolume); }
     /** Toggles and persists music mute state. */
     public void toggleBgmMuted() { bgmMuted = !bgmMuted; persist(BGM_MUTED, bgmMuted); }

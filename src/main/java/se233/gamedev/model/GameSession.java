@@ -166,44 +166,26 @@ public final class GameSession {
             GameLogger.gameEvent("Weather ended: "+weatherEvent.getType()+" on stage "+stageNumber);
         }
     }
-    /** คืนจำนวนอิฐที่ทำลายต่อเนื่องในด่านปัจจุบัน */
     public int getComboStreak(){return comboStreak;}
-    /** คืนตัวคูณคะแนนจากคอมโบ โดยเพิ่ม 10% ทุก 3 อิฐ สูงสุด 50% */
     public double getComboMultiplier(){
         int comboSteps=Math.min(comboStreak/COMBO_STEP,MAX_COMBO_STEPS);
         return 1.0+comboSteps*COMBO_BONUS_PER_STEP;
     }
-    /** คืนค่าคะแนนสะสมของรอบเกม */
     public int getScore(){return score;}
-    /** คืนค่าจำนวนชีวิตที่เหลือ */
     public double getLives(){return lives;}
-    /** คืนค่าหมายเลขด่านปัจจุบัน */
     public int getStageNumber(){return stageNumber;}
-    /** คืนค่าจำนวนด่านทั้งหมดของรอบ */
     public int getTotalStages(){return totalStages;}
-    /** คืนค่าโมเดลด่านปัจจุบัน */
     public Stage getStage(){return stage;}
-    /** คืนค่าสถานะปัจจุบันของเกม */
     public GameState getState(){return state;}
-    /** คืนรายการอัปเกรดที่กำลังเสนอให้ผู้เล่นเลือก */
     public List<Upgrade> getOfferedUpgrades(){return offered;}
-    /** คืนชุดอัปเกรดที่ได้รับแล้วในรูปแบบแก้ไขจากภายนอกไม่ได้ */
     public Set<UpgradeType> getAcquiredUpgrades(){return Collections.unmodifiableSet(acquired);}
-    /** คืนตัวคูณความกว้างไม้พายที่สะสมจากอัปเกรด */
     public double getPaddleWidthMultiplier(){return paddleWidthMultiplier;}
-    /** คืนตัวคูณคะแนนที่สะสมจากอัปเกรด */
     public double getScoreMultiplier(){return scoreMultiplier;}
-    /** คืนตัวคูณความเร็วลูกบอลที่สะสมจากอัปเกรด */
     public double getBallSpeedMultiplier(){return ballSpeedMultiplier;}
-    /** คืนจำนวนครั้งสุ่มตัวเลือกอัปเกรดที่ยังเหลือ */
     public int getRerollsRemaining(){return rerollsRemaining;}
-    /** คืนจำนวนลูกบอลเพิ่มเติมที่อัปเกรดมัลติบอลมอบให้ */
     public int getAdditionalBallCount(){return additionalBallCount;}
-    /** ตรวจว่ารอบเกมนี้ได้รับอัปเกรดชนิดที่ระบุแล้วหรือไม่ */
     public boolean hasUpgrade(UpgradeType type){return acquired.contains(type);}
-    /** คืนเหตุการณ์อากาศของด่าน หรือค่าว่างเมื่อด่านนี้ไม่มีเหตุการณ์ */
     public Optional<WeatherEvent> getWeatherEvent(){return Optional.ofNullable(weatherEvent);}
-    /** คืนตัวคูณคะแนนจากสภาพอากาศที่ยังทำงานอยู่ */
     public double getWeatherScoreMultiplier(){
         return weatherEvent==null?1.0:weatherEvent.getScoreMultiplier();
     }

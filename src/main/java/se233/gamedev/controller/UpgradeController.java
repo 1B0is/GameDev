@@ -42,11 +42,6 @@ public final class UpgradeController {
     private UpgradeType hoveredOwnedType;
     private AnimationTimer loop;
 
-    /** Stores the session, offered modules, and transition callback. */
-    public UpgradeController(GameSession session,
-                             java.util.function.Consumer<GameSession> onContinue) {
-        this(session, onContinue, null);
-    }
 
     /** Stores the completed gameplay frame for a subdued module-bay background. */
     public UpgradeController(GameSession session,
@@ -128,6 +123,8 @@ public final class UpgradeController {
         audio.playSfx(AudioManager.MENU_SELECT);
     }
 
+
+    /* ยืนยัน/reroll พร้อม state/animation ส่งกลับเข้าหน้าเกม */
     private void reroll() {
         if (!selection.isInputEnabled() || session.getRerollsRemaining() == 0) return;
         if (GameErrorHandler.run(session::rerollUpgrades)) {
@@ -160,6 +157,8 @@ public final class UpgradeController {
         return -1;
     }
 
+
+    /* วาดภาพหน้า upgrade */
     private void draw(GraphicsContext gc) {
         gc.setImageSmoothing(false);
         gc.setFill(ScaledRoot.VOID_VIOLET);

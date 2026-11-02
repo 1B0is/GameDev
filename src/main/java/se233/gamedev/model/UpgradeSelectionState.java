@@ -64,11 +64,8 @@ public final class UpgradeSelectionState {
         return true;
     }
 
-    /** Returns the current offers, retaining old cards while a reroll animation plays. */
     public List<Upgrade> getOffers() { return offers; }
-    /** Returns the current highlighted card index. */
     public int getSelectedIndex() { return selectedIndex; }
-    /** Returns whether the intro is complete and no transition is running. */
     public boolean isInputEnabled() {
         return elapsedSeconds >= INTRO_DURATION_SECONDS && pendingOffers == null && !confirmed;
     }
@@ -76,9 +73,7 @@ public final class UpgradeSelectionState {
     public double getIntroProgress() {
         return Math.max(0, Math.min(1, elapsedSeconds / INTRO_DURATION_SECONDS));
     }
-    /** Returns the elapsed screen time for ambient selection-card effects. */
     public double getElapsedSeconds() { return elapsedSeconds; }
-    /** Returns whether a reroll animation is in progress. */
     public boolean isRerolling() { return pendingOffers != null; }
     /** Returns progress through the reroll animation from zero to one. */
     public double getRerollProgress() {

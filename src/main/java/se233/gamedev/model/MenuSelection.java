@@ -13,8 +13,6 @@ public final class MenuSelection {
         return selected();
     }
 
-    /** Returns the selected menu action identifier. */
     public Action selected() { return Action.values()[selectedIndex]; }
-    /** Returns the current zero-based selection index. */
     public int getSelectedIndex() { return selectedIndex; }
 }

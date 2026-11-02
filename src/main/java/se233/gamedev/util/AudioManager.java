@@ -40,9 +40,7 @@ public final class AudioManager {
         activeTrack = null;
     }
 
-    /** Returns the shared application audio manager. */
     public static AudioManager getInstance() { return INSTANCE; }
-    /** Returns the shared persisted preferences used by menu controls. */
     public AudioSettings getSettings() { return settings; }
 
     /** Starts or crossfades to the looping menu track. */
