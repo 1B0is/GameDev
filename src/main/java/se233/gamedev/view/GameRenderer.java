@@ -86,6 +86,7 @@ public final class GameRenderer {
                 ? weatherEvent.getType() : null;
         WeatherTheme theme = WeatherTheme.forWeather(weather);
         GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.save();
         gc.setImageSmoothing(false);
         gc.scale(viewportScale, viewportScale);
         drawField(gc, theme);
@@ -129,6 +130,7 @@ public final class GameRenderer {
             PixelFont.draw(gc, status, 400 - status.length() * 6.0,
                     319, 2, Color.WHITE);
         }
+        gc.restore();
     }
 
     /** เลือกภาพสนามที่สุ่มไว้ วาดพื้นที่เล่นและกรอบตกแต่ง */

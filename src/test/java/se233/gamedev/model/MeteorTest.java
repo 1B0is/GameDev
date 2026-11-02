@@ -21,17 +21,30 @@ class MeteorTest {
 
     /** ตรวจตำแหน่งเกิดแบบสุ่มตามช่วงเวลาและการหลุดขอบสนาม */
     @Test
-    void spawnsAtRandomFieldPositionAfterOneSecondAndDisappearsBelowField() {
+    void spawnsAtRandomFieldPositionAfterConfiguredIntervalAndDisappearsBelowField() {
         MeteorSpawner spawner = new MeteorSpawner(new Random(7));
-        assertNull(spawner.update(0.5, GameBounds.FIELD_WIDTH));
-        Meteor meteor = spawner.update(0.5, GameBounds.FIELD_WIDTH);
+        double halfInterval = MeteorSpawner.SPAWN_INTERVAL_SECONDS / 2;
+        assertNull(spawner.update(halfInterval, GameBounds.FIELD_WIDTH, true));
+        Meteor meteor = spawner.update(halfInterval, GameBounds.FIELD_WIDTH, true);
         assertNotNull(meteor);
         assertTrue(meteor.getX() >= 0);
         assertTrue(meteor.getX() + meteor.getWidth() <= GameBounds.FIELD_WIDTH);
-        Meteor nextMeteor = spawner.update(1, GameBounds.FIELD_WIDTH);
+        Meteor nextMeteor = spawner.update(MeteorSpawner.SPAWN_INTERVAL_SECONDS,
+                GameBounds.FIELD_WIDTH, true);
         assertNotNull(nextMeteor);
         assertNotEquals(meteor.getX(), nextMeteor.getX());
         meteor.update(3);
         assertTrue(meteor.isBelowField(GameBounds.FIELD_HEIGHT));
+    }
+
+    /** เวลาสร้างอุกกาบาตต้องเริ่มนับหลังผู้เล่นปล่อยลูกบอลเท่านั้น */
+    @Test
+    void doesNotAccumulateSpawnTimeUntilBallIsLaunched() {
+        MeteorSpawner spawner = new MeteorSpawner(new Random(7));
+        assertNull(spawner.update(10, GameBounds.FIELD_WIDTH, false));
+        assertEquals(0, spawner.getElapsedSeconds());
+        double beforeInterval = MeteorSpawner.SPAWN_INTERVAL_SECONDS - 0.1;
+        assertNull(spawner.update(beforeInterval, GameBounds.FIELD_WIDTH, true));
+        assertNotNull(spawner.update(0.1, GameBounds.FIELD_WIDTH, true));
     }
 }

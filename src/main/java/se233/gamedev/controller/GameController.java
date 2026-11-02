@@ -303,7 +303,8 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             return;
         }
 
-        Meteor spawned = meteorSpawner.update(deltaSeconds, FIELD_WIDTH);
+        boolean gameLaunched = !balls.isEmpty() && balls.get(0).isLaunched();
+        Meteor spawned = meteorSpawner.update(deltaSeconds, FIELD_WIDTH, gameLaunched);
         if (spawned != null) {
             meteors.add(spawned);
             GameLogger.playerAction("Meteor spawned at x=" + Math.round(spawned.getX()));

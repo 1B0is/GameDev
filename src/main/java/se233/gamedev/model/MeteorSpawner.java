@@ -13,12 +13,13 @@ public final class MeteorSpawner {
         this.random = Objects.requireNonNull(random, "random");
     }
 
-    /** สะสมเวลาและคืนอุกกาบาตใหม่เมื่อครบหนึ่งวินาที */
-    public Meteor update(double dtSeconds, double fieldWidth) {
+    /** สะสมเวลาและคืนอุกกาบาตใหม่เมื่อครบช่วง โดยเริ่มนับหลังปล่อยลูกบอล */
+    public Meteor update(double dtSeconds, double fieldWidth, boolean gameLaunched) {
         if (dtSeconds < 0) throw new IllegalArgumentException("Delta time cannot be negative");
+        if (!gameLaunched) return null;
         elapsedSeconds += dtSeconds;
-        if (elapsedSeconds < SPAWN_INTERVAL_SECONDS) return null;
-        elapsedSeconds -= SPAWN_INTERVAL_SECONDS;
+        if (elapsedSeconds + 1e-9 < SPAWN_INTERVAL_SECONDS) return null;
+        elapsedSeconds = Math.max(0, elapsedSeconds - SPAWN_INTERVAL_SECONDS);
         double x = Meteor.WIDTH / 2
                 + random.nextDouble() * (fieldWidth - Meteor.WIDTH);
         return new Meteor(x, GameBounds.HUD_HEIGHT);
