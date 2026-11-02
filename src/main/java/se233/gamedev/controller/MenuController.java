@@ -34,14 +34,12 @@ public final class MenuController {
     private boolean draggingEffects;
     private AnimationTimer loop;
 
-    /** Stores the screen actions invoked from the launch console. */
     public MenuController(Runnable onStart, Runnable onHowToPlay, Runnable onExit) {
         this.onStart = onStart;
         this.onHowToPlay = onHowToPlay;
         this.onExit = onExit;
     }
 
-    /** Creates the menu canvas and starts its time-based ambient rendering. */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(ScaledRoot.LOGICAL_WIDTH, ScaledRoot.LOGICAL_HEIGHT);
@@ -92,7 +90,6 @@ public final class MenuController {
         return root;
     }
 
-    /** Stops ambient animation when this screen is no longer active. */
     public void stop() {
         if (loop != null) loop.stop();
     }

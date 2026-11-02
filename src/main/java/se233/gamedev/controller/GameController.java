@@ -38,8 +38,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
-
-/** รับอินพุตและอัปเดตโมเดล ส่วนการวาดทั้งหมดส่งให้ GameRenderer */
+/** Handles input and updates game state; GameRenderer handles all drawing. */
 public final class GameController extends BorderPane implements ScaleAwareScreen {
     private static final double FIELD_WIDTH = GameBounds.FIELD_WIDTH;
     private static final double FIELD_HEIGHT = GameBounds.FIELD_HEIGHT;
@@ -73,8 +72,7 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
     private boolean stopped;
     private double viewportScale = 1;
     private final Scale canvasCounterScale = new Scale(1, 1, 0, 0);
-
-    /** ผูกเซสชันเกมเข้ากับหน้าจอ สร้างวัตถุที่ควบคุม และเริ่มลูปเกม */
+    /** Initializes the controller and starts the animation loop. */
     public GameController(GameSession session, Consumer<GameSession> onStateChange) {
         this.session = session;
         this.onStateChange = onStateChange;
@@ -94,7 +92,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
         canvas.setFocusTraversable(true);
 
         loop = new AnimationTimer() {
-            /** คำนวณเวลาระหว่างเฟรม อัปเดตเกม แล้วสั่งวาดเฟรมปัจจุบัน */
             @Override
             public void handle(long now) {
                 if (previousFrame == 0) {
@@ -113,8 +110,7 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
         loop.start();
         Platform.runLater(canvas::requestFocus);
     }
-
-    /** Resizes the Canvas backing store while retaining logical model coordinates. */
+    /** Resizes the canvas while preserving the game world's logical coordinates. */
     @Override
     public void setViewportScale(double scale) {
         if (!Double.isFinite(scale) || scale <= 0) return;
@@ -124,8 +120,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
         canvasCounterScale.setX(1 / scale);
         canvasCounterScale.setY(1 / scale);
     }
-
-    /** ลงทะเบียนปุ่มควบคุมและคำสั่งปล่อยลูกบอลกับฉาก JavaFX */
     private void installKeyboard() {
         canvas.sceneProperty().addListener((observable, oldScene, scene) -> {
             if (scene == null) return;
@@ -144,14 +138,10 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
         });
         canvas.setOnKeyReleased(event -> keysDown.remove(event.getCode()));
     }
-
-    /** ปล่อยลูกบอลทั้งหมดให้เคลื่อนที่ขึ้นตรงตามตัวคูณความเร็วปัจจุบัน */
     private void launchBalls() {
         double speed = session.getBallSpeedMultiplier();
         for (Ball ball : balls) ball.launch(0, -4.4 * speed);
     }
-
-    /** อัปเดตเวลา สถานะ อินพุต ลูกบอล พาวเวอร์อัป และความคืบหน้าด่าน */
     private void update(double frameScale) {
         double deltaSeconds = frameScale / 60.0;
         if (statusSeconds > 0) {
@@ -202,8 +192,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
         hitFlashes.replaceAll((brick, time) -> Math.max(0, time - deltaSeconds));
         hitFlashes.entrySet().removeIf(entry -> entry.getValue() <= 0);
     }
-
-    /** จัดตำแหน่งลูกบอลที่ยังไม่ปล่อยให้อยู่เหนือไม้พาย */
     private void positionDockedBalls() {
         double centerX = paddle.getX() + paddle.getWidth() / 2 - 7;
         for (int i = 0; i < balls.size(); i++) {
@@ -211,8 +199,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             balls.get(i).reset(centerX + offset, GameBounds.BALL_START_Y);
         }
     }
-
-    /** เคลื่อนลูกบอลแต่ละลูกและนำลูกที่หลุดขอบสนามออกจากรายการ */
     private void updateBalls(double frameScale) {
         Iterator<Ball> iterator = balls.iterator();
         while (iterator.hasNext()) {
@@ -226,8 +212,7 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
         }
 
     }
-
-    /** อัปเดตการชนของลูกบอลหนึ่งลูกกับขอบ ไม้พาย และอิฐ */
+    /** Updates a ball and handles its collisions with the field, paddle, and bricks. */
     private void updateBall(Ball ball, double frameScale) {
         ball.move(frameScale);
         ball.bounceOffWalls(8, GameRenderer.HUD_HEIGHT + 8, FIELD_WIDTH - 8, FIELD_HEIGHT);
@@ -251,8 +236,7 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             break;
         }
     }
-
-    /** ลดพลังชีวิตอิฐ บันทึกคะแนน และสุ่มสร้างไอเทมลำแสงเมื่อเข้าเงื่อนไข */
+    /** Applies brick damage, updates the score on destruction, and may spawn a beam power-up. */
     private void damageBrick(Brick brick, boolean canDropPowerUp) {
         hitFlashes.put(brick, 0.16);
         AudioManager.getInstance().playSfx(AudioManager.BRICK_HIT);
@@ -270,8 +254,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             beamDrops.add(new Point2D(brick.getX() + brick.getWidth() / 2 - 14, brick.getY()));
         }
     }
-
-    /** เคลื่อนที่ไอเทมลำแสงและตรวจจับการเก็บด้วยไม้พาย */
     private void updateBeamDrops(double frameScale) {
         for (int i = beamDrops.size() - 1; i >= 0; i--) {
             Point2D drop = beamDrops.get(i).add(0, 2.2 * frameScale);
@@ -293,8 +275,7 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             }
         }
     }
-
-    /** สร้างอุกกาบาตตามเวลาจำลอง ตรวจชนไม้พาย และใช้ชีวิตครึ่งหน่วยพร้อมช่วงคุ้มกัน */
+    /** Updates meteor hazards and applies temporary invulnerability after a collision. */
     private void updateMeteors(double deltaSeconds) {
         meteorHitGuard.update(deltaSeconds);
         WeatherEvent event = session.getWeatherEvent().orElse(null);
@@ -332,14 +313,12 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             }
         }
     }
-
-    /** ล้างอุกกาบาตที่ยังตกอยู่และเริ่มนับช่วงเกิดใหม่ตั้งแต่ต้น */
+    /** Clears active meteors and resets the spawn timer. */
     private void clearMeteors() {
         meteors.clear();
         meteorSpawner.reset();
     }
-
-    /** นับเวลาการยิงและจ่ายจังหวะความเสียหายของลำแสง */
+    /** Advances the temporary beam attack and applies its timed damage pulses. */
     private void updateActiveBeam(double deltaSeconds) {
         if (beamSeconds <= 0) return;
         beamSeconds = Math.max(0, beamSeconds - deltaSeconds);
@@ -356,8 +335,7 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             beamTickTimer += BEAM_TICK_SECONDS;
         }
     }
-
-    /** สร้างความเสียหายแก่ก้อนอิฐที่แนวลำแสงตัดผ่าน */
+    /** Damages intact bricks intersected by either beam emitter. */
     private void fireBeamTick() {
         double[] beamXs = BeamGeometry.emitterXPositions(paddle.getX(), paddle.getWidth());
         for (Brick brick : session.getStage().getBricks()) {
@@ -374,8 +352,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             }
         }
     }
-
-    /** ลดชีวิตเมื่อเสียบอล แล้วเริ่มแอนิเมชันแพ้หรือเตรียมบอลรอบใหม่ */
     private void loseBallLife() {
         if (!GameErrorHandler.run(session::loseLife)) {
             stop();
@@ -390,8 +366,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             status = "LIFE LOST - PRESS SPACE";
         }
     }
-
-    /** สร้างและจัดวางบอลตามจำนวนบอลที่อัปเกรดมอบให้ในด่านปัจจุบัน */
     private void resetBalls() {
         balls.clear();
         int count = 1 + session.getAdditionalBallCount();
@@ -402,24 +376,20 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
             balls.add(new Ball(centerX + offset - 7, GameBounds.BALL_START_Y, 14));
         }
     }
-
-    /** ส่งข้อมูลโมเดลและเอฟเฟกต์ให้ตัววาดเพื่ออัปเดต Canvas */
     private void render() {
         renderer.draw(canvas, viewportScale, session, balls, paddle.getX(), paddle.getWidth(),
                 hitFlashes, beamDrops, beamSeconds, gameOverAnimationSeconds,
                 status, meteors, session.getWeatherEvent().orElse(null),
                 weatherPopup, meteorHitGuard.isInvulnerable());
     }
-
-    /** หยุดลูปแอนิเมชันโดยไม่หยุดซ้ำเมื่อถูกเรียกหลายครั้ง */
+    /** Stops the animation loop once. */
     public void stop() {
         if (!stopped) {
             loop.stop();
             stopped = true;
         }
     }
-
-    /** Captures the last gameplay frame for the between-stage backdrop. */
+    /** Captures the current gameplay frame for the between-stage backdrop. */
     public WritableImage snapshotGameplay() {
         return canvas.snapshot(null, null);
     }

@@ -10,17 +10,15 @@ import se233.gamedev.view.PixelFont;
 import se233.gamedev.view.ScaledRoot;
 import se233.gamedev.view.WeatherTheme;
 
-/** Displays concise pixel-art controls and weather information. */
+/** Displays pixel-art controls and weather information. */
 public final class HowToPlayController {
     private final Runnable onBack;
     private final Canvas canvas = new Canvas(800, 720);
 
-    /** Stores the callback that returns to the main menu. */
     public HowToPlayController(Runnable onBack) {
         this.onBack = onBack;
     }
 
-    /** Creates the instructions screen and registers Escape and Back interactions. */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(800, 720);
