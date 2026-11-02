@@ -15,19 +15,17 @@ import se233.gamedev.view.PixelFont;
 import se233.gamedev.view.PixelFonts;
 import se233.gamedev.view.ScaledRoot;
 
-/** Displays the final result in the shared logical screen and offers a new run. */
+/** Displays the final result and offers a way to start a new run. */
 public final class GameOverController {
     private final GameSession session;
     private final Runnable onRestart;
     private final Canvas canvas = new Canvas(800, 720);
 
-    /** Stores the completed session and the restart action. */
     public GameOverController(GameSession session, Runnable onRestart) {
         this.session = session;
         this.onRestart = onRestart;
     }
 
-    /** Creates a fixed-resolution pixel result screen with keyboard and mouse restart input. */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(800, 720);
@@ -48,7 +46,7 @@ public final class GameOverController {
         draw(canvas.getGraphicsContext2D());
         return root;
     }
-    /* วาด menu , title, แถบเสียง, ดาว , scanlines*/
+
     private void draw(GraphicsContext gc) {
         boolean won = session.getState() == GameState.VICTORY;
         gc.setImageSmoothing(false);

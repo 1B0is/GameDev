@@ -42,8 +42,14 @@ public final class UpgradeController {
     private UpgradeType hoveredOwnedType;
     private AnimationTimer loop;
 
+<<<<<<< HEAD
+=======
+    public UpgradeController(GameSession session,
+                             java.util.function.Consumer<GameSession> onContinue) {
+        this(session, onContinue, null);
+    }
+>>>>>>> a6c40d904f8676d65de2ba310f6dd126bdd46456
 
-    /** Stores the completed gameplay frame for a subdued module-bay background. */
     public UpgradeController(GameSession session,
                              java.util.function.Consumer<GameSession> onContinue,
                              Image gameplayBackdrop) {
@@ -53,7 +59,6 @@ public final class UpgradeController {
         selection = new UpgradeSelectionState(session.getOfferedUpgrades());
     }
 
-    /** Creates the fixed-resolution module bay and installs mouse and keyboard interaction. */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(800, 720);
@@ -94,7 +99,6 @@ public final class UpgradeController {
         return root;
     }
 
-    /** Stops card animation when leaving the module bay. */
     public void stop() {
         if (loop != null) loop.stop();
     }
