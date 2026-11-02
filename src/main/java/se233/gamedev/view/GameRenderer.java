@@ -27,16 +27,17 @@ public final class GameRenderer {
     public static final double CANVAS_WIDTH = GameBounds.FIELD_WIDTH;
     public static final double CANVAS_HEIGHT = GameBounds.FIELD_HEIGHT;
     public static final double HUD_HEIGHT = GameBounds.HUD_HEIGHT;
-    private static final double FOG_BASE_OPACITY = 0.25;
-    private static final double FOG_MIN_OPACITY = 0.16;
-    private static final double FOG_MAX_OPACITY = 0.34;
-    private static final double FOG_PULSE_AMPLITUDE = 0.045;
+    private static final double FOG_OPACITY = 1.0;
+    private static final double FOG_BASE_HAZE_OPACITY = 0.12;
     private static final double FOG_FADE_SECONDS = 0.8;
+    private static final int FOG_BLUR_SCALE = 6;
+    private static final double[] FOG_LAYER_OPACITIES = {0.52, 0.36, 0.26};
     private static final double METEOR_INVULNERABILITY_BLINK_SECONDS = 0.12;
 
     private static final Image FIELDS = load("/se233/gamedev/images/Fields.png");
     private static final Image BLOCKS = load("/se233/gamedev/images/Blocks_Backgrounds.png");
-    private static final Image FOG = keyBlack(load("/se233/gamedev/images/Fog.png"));
+    private static final Image FOG = blurImage(
+            keyBlack(load("/se233/gamedev/images/Fog.png")), FOG_BLUR_SCALE);
     private static final Image METEOR = keyBlack(load("/se233/gamedev/images/METEOR.png"));
     private static final int[] METEOR_BOUNDS = opaqueBounds(METEOR);
     private static final Image BLURRED_NORMAL_BRICK = blurTile(BLOCKS, 0, 16, 16, 8);
@@ -99,7 +100,6 @@ public final class GameRenderer {
             }
         }
 
-        if (weather == WeatherType.FOG_VALLEY) drawFog(gc);
         if (weather == WeatherType.METEOR_SHOWER) drawMeteors(gc, meteors, weatherElapsedSeconds);
         if (beamSeconds > 0) drawBeams(gc, paddleX, paddleWidth);
         if (gameOverAnimationSeconds < 0) {
@@ -119,6 +119,7 @@ public final class GameRenderer {
         if (gameOverAnimationSeconds >= 0) {
             drawExplosion(gc, paddleX, paddleWidth, gameOverAnimationSeconds);
         }
+        if (weather == WeatherType.FOG_VALLEY) drawFog(gc);
         if (weatherPopup != null && weatherPopup.isVisible() && weather != null) {
             WarningPopupRenderer.draw(gc, weather, theme, weatherPopup, FOG, METEOR, METEOR_BOUNDS);
         }
@@ -273,13 +274,10 @@ public final class GameRenderer {
         gc.fillOval(ball.getX() + 3, ball.getY() + 2, 4, 4);
     }
 
-    /** วาดชั้นหมอกที่เลื่อนช้า ๆ พร้อมความทึบที่แกว่งและบางลงใกล้ไม้พาย */
+    /** วาดหมอกเต็มสนามซ้อนหลายชั้นทับวัตถุเกม เพื่อบดบังลูกบอลและอิฐ */
     private void drawFog(GraphicsContext gc) {
         if (FOG == null) return;
-        double wave = Math.sin(weatherElapsedSeconds * 0.55) * FOG_PULSE_AMPLITUDE;
         double fadeIn = Math.min(1, weatherElapsedSeconds / FOG_FADE_SECONDS);
-        double opacity = Math.max(FOG_MIN_OPACITY,
-                Math.min(FOG_MAX_OPACITY, FOG_BASE_OPACITY + wave)) * fadeIn;
         double areaY = HUD_HEIGHT;
         double areaHeight = CANVAS_HEIGHT - HUD_HEIGHT;
         gc.save();
@@ -287,15 +285,15 @@ public final class GameRenderer {
         gc.rect(0, areaY, CANVAS_WIDTH, areaHeight);
         gc.closePath();
         gc.clip();
-        drawFogLayer(gc, opacity * 0.55, weatherElapsedSeconds * 7, 0,
-                CANVAS_WIDTH * 1.25, areaHeight * 1.15);
-        drawFogLayer(gc, opacity * 0.35, -weatherElapsedSeconds * 11, 18,
-                CANVAS_WIDTH * 1.12, areaHeight * 1.05);
-        drawFogLayer(gc, opacity * 0.22, weatherElapsedSeconds * 16, -12,
-                CANVAS_WIDTH * 1.35, areaHeight * 1.20);
-        gc.setGlobalAlpha(0.10);
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, GameBounds.PADDLE_Y - 112, CANVAS_WIDTH, 112);
+        gc.setGlobalAlpha(FOG_BASE_HAZE_OPACITY * fadeIn);
+        gc.setFill(Color.web("#c8cbd0"));
+        gc.fillRect(0, areaY, CANVAS_WIDTH, areaHeight);
+        drawFogLayer(gc, FOG_OPACITY * FOG_LAYER_OPACITIES[0] * fadeIn,
+                weatherElapsedSeconds * 7, 0, CANVAS_WIDTH * 1.25, areaHeight * 1.15);
+        drawFogLayer(gc, FOG_OPACITY * FOG_LAYER_OPACITIES[1] * fadeIn,
+                -weatherElapsedSeconds * 11, 18, CANVAS_WIDTH * 1.12, areaHeight * 1.05);
+        drawFogLayer(gc, FOG_OPACITY * FOG_LAYER_OPACITIES[2] * fadeIn,
+                weatherElapsedSeconds * 16, -12, CANVAS_WIDTH * 1.35, areaHeight * 1.20);
         gc.restore();
     }
 
@@ -304,8 +302,10 @@ public final class GameRenderer {
                               double offsetY, double width, double height) {
         double x = -((offsetX % width + width) % width);
         gc.setGlobalAlpha(opacity);
+        gc.setImageSmoothing(true);
         gc.drawImage(FOG, x, GameBounds.HUD_HEIGHT + offsetY, width, height);
         gc.drawImage(FOG, x + width, GameBounds.HUD_HEIGHT + offsetY, width, height);
+        gc.setImageSmoothing(false);
         gc.setGlobalAlpha(1);
     }
 
@@ -447,6 +447,45 @@ public final class GameRenderer {
                 }
                 writer.setColor(x, y, new Color(red / count, green / count,
                         blue / count, alpha / count));
+            }
+        }
+        return blurred;
+    }
+
+    /** ลดความละเอียดของภาพหมอกก่อนขยายแบบ smoothing เพื่อให้ได้ลักษณะฟุ้งนุ่ม */
+    private static Image blurImage(Image source, int scale) {
+        if (source == null || source.isError()) return null;
+        int sourceWidth = (int) source.getWidth();
+        int sourceHeight = (int) source.getHeight();
+        int width = Math.max(1, (sourceWidth + scale - 1) / scale);
+        int height = Math.max(1, (sourceHeight + scale - 1) / scale);
+        PixelReader reader = source.getPixelReader();
+        WritableImage blurred = new WritableImage(width, height);
+        var writer = blurred.getPixelWriter();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                double red = 0;
+                double green = 0;
+                double blue = 0;
+                double alpha = 0;
+                int samples = 0;
+                int startX = x * scale;
+                int startY = y * scale;
+                int endX = Math.min(sourceWidth, startX + scale);
+                int endY = Math.min(sourceHeight, startY + scale);
+                for (int sy = startY; sy < endY; sy++) {
+                    for (int sx = startX; sx < endX; sx++) {
+                        Color pixel = reader.getColor(sx, sy);
+                        red += pixel.getRed();
+                        green += pixel.getGreen();
+                        blue += pixel.getBlue();
+                        alpha += pixel.getOpacity();
+                        samples++;
+                    }
+                }
+                writer.setColor(x, y, new Color(red / samples, green / samples,
+                        blue / samples, alpha / samples));
             }
         }
         return blurred;

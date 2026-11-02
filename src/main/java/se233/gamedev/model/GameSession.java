@@ -14,7 +14,7 @@ import java.util.Optional;
 public final class GameSession {
     public static final int DEFAULT_STAGE_COUNT=5;
     public static final int MAX_UPGRADE_REROLLS=3;
-    public static final double WEATHER_CHANCE_PER_STAGE=0.3;
+    public static final double WEATHER_CHANCE_PER_STAGE=0.8;
     private static final int COMBO_STEP=3;
     private static final int MAX_COMBO_STEPS=5;
     private static final double COMBO_BONUS_PER_STEP=0.10;

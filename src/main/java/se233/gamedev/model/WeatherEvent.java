@@ -7,6 +7,7 @@ import java.util.Random;
 /** สถานะเหตุการณ์อากาศของด่าน รวมชนิด ความทำงาน และตัวคูณคะแนน */
 public final class WeatherEvent {
     public static final double SCORE_MULTIPLIER = 1.25;
+    public static final double FOG_CHANCE_WHEN_WEATHER_OCCURS = 0.5;
     private final WeatherType type;
     private boolean active;
 
@@ -23,8 +24,9 @@ public final class WeatherEvent {
         }
 
         if (random.nextDouble() >= probability) return Optional.empty();
-        WeatherType[] types = WeatherType.values();
-        return Optional.of(new WeatherEvent(types[random.nextInt(types.length)], true));
+        WeatherType type = random.nextDouble() < FOG_CHANCE_WHEN_WEATHER_OCCURS
+                ? WeatherType.FOG_VALLEY : WeatherType.METEOR_SHOWER;
+        return Optional.of(new WeatherEvent(type, true));
     }
 
     /** สร้างเหตุการณ์ที่กำหนดชนิดโดยตรงสำหรับทดสอบกฎคะแนนและสถานะ */
