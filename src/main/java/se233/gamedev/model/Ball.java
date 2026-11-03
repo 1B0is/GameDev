@@ -27,11 +27,6 @@ public final class Ball extends GameObject {
         launched = true;
     }
 
-    /** ปล่อยลูกบอลด้วยความเร็วเริ่มต้นแนวทแยงตามค่ามาตรฐาน */
-    public void launch() {
-        launch(3.2, -6.4);
-    }
-
     /** ปล่อยลูกบอลด้วยความเร็วที่ผู้เรียกกำหนด หากยังไม่เคยปล่อย */
     public void launch(double velocityX, double velocityY) {
         if (!launched) {

@@ -185,8 +185,6 @@ public final class MenuController {
         double y = 112;
         PixelFont.drawBricked(gc, title, x, y, 5, intro,
                 ScaledRoot.ION_CYAN, ScaledRoot.HOT_MAGENTA);
-        PixelFont.draw(gc, "LAUNCH CONSOLE  /  SHIP HANGAR", 280, y + 62,
-                1, ScaledRoot.FROST_WHITE);
         gc.setFill(ScaledRoot.PANEL_PLUM);
         gc.fillRect(294, y + 78, 212, 4);
         gc.setFill(ScaledRoot.ION_CYAN);

@@ -84,11 +84,12 @@ public final class HowToPlayController {
 
     /** วาดปุ่มคีย์บอร์ดตัวอย่างพร้อมกรอบ */
     private void drawKey(GraphicsContext gc, double x, double y, String label) {
+        double width = label.length() > 1 ? 54 : 42;
         gc.setFill(ScaledRoot.PANEL_PLUM);
-        gc.fillRect(x, y, label.length() > 1 ? 54 : 42, 42);
-        gc.setStroke(ScaledRoot.SIGNAL_AMBER);
+        gc.fillRect(x, y, width, 42);
+        gc.setStroke(label.equals("SPACE") ? ScaledRoot.ION_CYAN : ScaledRoot.SIGNAL_AMBER);
         gc.setLineWidth(2);
-        gc.strokeRect(x, y, label.length() > 1 ? 54 : 42, 42);
+        gc.strokeRect(x, y, width, 42);
         PixelFont.draw(gc, label, x + (label.length() > 1 ? 7 : 14), y + 13, 2,
                 ScaledRoot.FROST_WHITE);
     }

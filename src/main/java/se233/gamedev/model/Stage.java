@@ -21,11 +21,6 @@ public final class Stage {
     private final List<Brick> bricks;
     private int bricksDestroyed;
 
-    /** สร้างด่านตามหมายเลขและจำนวนด่านทั้งหมด พร้อมสร้างตำแหน่งและชนิดอิฐ */
-    public Stage(int number,int totalStages){
-        this(number, totalStages, new Random());
-    }
-
     /** สร้างด่านโดยใช้ตัวสุ่มที่กำหนด เพื่อให้รูปแบบและชนิดอิฐทำซ้ำได้ในการทดสอบ */
     public Stage(int number, int totalStages, Random random) {
         if (totalStages < 1 || number < 1 || number > totalStages) {

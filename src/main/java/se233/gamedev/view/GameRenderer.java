@@ -28,10 +28,10 @@ public final class GameRenderer {
     public static final double CANVAS_HEIGHT = GameBounds.FIELD_HEIGHT;
     public static final double HUD_HEIGHT = GameBounds.HUD_HEIGHT;
     private static final double FOG_OPACITY = 1.0;
-    private static final double FOG_BASE_HAZE_OPACITY = 0.12;
+    private static final double FOG_BASE_HAZE_OPACITY = 0.24;
     private static final double FOG_FADE_SECONDS = 0.8;
     private static final int FOG_BLUR_SCALE = 6;
-    private static final double[] FOG_LAYER_OPACITIES = {0.52, 0.36, 0.26};
+    private static final double[] FOG_LAYER_OPACITIES = {1.0, 0.72, 0.52};
     private static final double METEOR_INVULNERABILITY_BLINK_SECONDS = 0.12;
 
     private static final Image FIELDS = load("/se233/gamedev/images/Fields.png");
@@ -189,7 +189,7 @@ public final class GameRenderer {
                     4, 20, comboScale, Color.web("#7CFC98"));
         }
         gc.restore();
-        PixelFont.draw(gc, "LAUNCH SPACE", 595, 68, 1, text);
+        PixelFont.draw(gc, "LAUNCH SPACE", 600, 68, 1, text);
     }
 
     /** วาดอิฐตามชนิด พร้อมเอฟเฟกต์แสดงพลังชีวิตและแสงเมื่อถูกชน */
@@ -289,11 +289,11 @@ public final class GameRenderer {
         gc.setFill(Color.web("#c8cbd0"));
         gc.fillRect(0, areaY, CANVAS_WIDTH, areaHeight);
         drawFogLayer(gc, FOG_OPACITY * FOG_LAYER_OPACITIES[0] * fadeIn,
-                weatherElapsedSeconds * 7, 0, CANVAS_WIDTH * 1.25, areaHeight * 1.15);
+                weatherElapsedSeconds * 7, -30, CANVAS_WIDTH * 1.25, areaHeight * 1.15);
         drawFogLayer(gc, FOG_OPACITY * FOG_LAYER_OPACITIES[1] * fadeIn,
-                -weatherElapsedSeconds * 11, 18, CANVAS_WIDTH * 1.12, areaHeight * 1.05);
+                -weatherElapsedSeconds * 11, -12, CANVAS_WIDTH * 1.12, areaHeight * 1.05);
         drawFogLayer(gc, FOG_OPACITY * FOG_LAYER_OPACITIES[2] * fadeIn,
-                weatherElapsedSeconds * 16, -12, CANVAS_WIDTH * 1.35, areaHeight * 1.20);
+                weatherElapsedSeconds * 16, -42, CANVAS_WIDTH * 1.35, areaHeight * 1.20);
         gc.restore();
     }
 
