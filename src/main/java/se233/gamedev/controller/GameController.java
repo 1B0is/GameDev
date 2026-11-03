@@ -378,7 +378,6 @@ public final class GameController extends BorderPane implements ScaleAwareScreen
     private void resetBalls() {
         balls.clear();
         int count = 1 + session.getAdditionalBallCount();
-        double width = 108 * session.getPaddleWidthMultiplier();
         double centerX = paddle.getX() + paddle.getWidth() / 2;
         for (int i = 0; i < count; i++) {
             double offset = (i - (count - 1) / 2.0) * 18;
