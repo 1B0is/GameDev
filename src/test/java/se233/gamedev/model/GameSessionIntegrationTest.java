@@ -8,7 +8,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Exercises brick scoring, stage clears, upgrade choice, and final victory in one run. */
+/** ทดสอบคะแนนอิฐ การผ่านด่าน การเลือกอัปเกรด และการชนะในรอบเดียว */
 class GameSessionIntegrationTest {
     @Test
     void completesTwoStagesAndKeepsRunStateAcrossUpgradeChoice() throws GameException {
@@ -36,6 +36,7 @@ class GameSessionIntegrationTest {
         assertEquals(GameState.VICTORY, game.getState());
     }
 
+    /** ทำลายอิฐทั้งหมดของด่านและสะสมคะแนนสำหรับการทดสอบ */
     private static void clearCurrentStage(GameSession game, int pointsPerBrick) throws GameException {
         int brickGoal = game.getStage().getBrickGoal();
         for (int i = 0; i < brickGoal; i++) {

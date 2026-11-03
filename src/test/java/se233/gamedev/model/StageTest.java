@@ -42,6 +42,7 @@ class StageTest {
         assertTrue(a.getBricks().stream().allMatch(brick -> brick.getHitPoints() > 0));
     }
 
+    /** นับจำนวนอิฐแข็งในด่านที่ใช้ตรวจรูปแบบการสร้างด่าน */
     private static long countStrong(Stage stage) {
         return stage.getBricks().stream().filter(brick -> brick.getType() == BrickType.STRONG).count();
     }

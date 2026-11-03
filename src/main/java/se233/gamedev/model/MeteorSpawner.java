@@ -9,6 +9,7 @@ public final class MeteorSpawner {
     private final Random random;
     private double elapsedSeconds;
 
+    /** สร้างตัวปล่อยอุกกาบาตโดยใช้ตัวสุ่มตำแหน่งที่กำหนด */
     public MeteorSpawner(Random random) {
         this.random = Objects.requireNonNull(random, "random");
     }
@@ -30,6 +31,7 @@ public final class MeteorSpawner {
         elapsedSeconds = 0;
     }
 
+    /** คืนเวลาที่สะสมตั้งแต่ปล่อยอุกกาบาตครั้งล่าสุด */
     public double getElapsedSeconds() {
         return elapsedSeconds;
     }

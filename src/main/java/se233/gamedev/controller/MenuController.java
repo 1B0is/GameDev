@@ -16,7 +16,7 @@ import se233.gamedev.view.PixelFont;
 import se233.gamedev.view.PixelFonts;
 import se233.gamedev.view.ScaledRoot;
 
-/** Renders the launch-console menu and handles keyboard and volume controls. */
+/** วาดเมนูหลักและจัดการการควบคุมเมนูกับระดับเสียง */
 public final class MenuController {
     public static final String GAME_TITLE = "Arkanoid";
     public static final boolean REDUCE_MOTION = false;
@@ -34,12 +34,14 @@ public final class MenuController {
     private boolean draggingEffects;
     private AnimationTimer loop;
 
+    /** สร้างเมนูพร้อมคำสั่งสำหรับเริ่มเกม ดูวิธีเล่น และออกจากเกม */
     public MenuController(Runnable onStart, Runnable onHowToPlay, Runnable onExit) {
         this.onStart = onStart;
         this.onHowToPlay = onHowToPlay;
         this.onExit = onExit;
     }
 
+    /** สร้างเมนู ติดตั้ง input และเริ่มแอนิเมชันพื้นหลัง */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(ScaledRoot.LOGICAL_WIDTH, ScaledRoot.LOGICAL_HEIGHT);
@@ -81,6 +83,7 @@ public final class MenuController {
         audio.playMenuMusic();
         startedAt = System.nanoTime();
         loop = new AnimationTimer() {
+            /** วาดเฟรมเมนูตามเวลาที่ผ่านไป */
             @Override
             public void handle(long now) {
                 draw(canvas.getGraphicsContext2D(), (now - startedAt) / 1_000_000_000.0);
@@ -90,10 +93,12 @@ public final class MenuController {
         return root;
     }
 
+    /** หยุดแอนิเมชันเมื่อออกจากหน้าเมนู */
     public void stop() {
         if (loop != null) loop.stop();
     }
 
+    /** แปลปุ่มคีย์บอร์ดเป็นการนำทาง เลือก หรือปรับเสียง */
     private void onKey(KeyCode code) {
         if (code == KeyCode.TAB) {
             focusedVolumeRow = (focusedVolumeRow + 1) % 2;
@@ -115,6 +120,7 @@ public final class MenuController {
         }
     }
 
+    /** เลือกรายการเมนูและเล่นเสียงเมื่อเปลี่ยนรายการ */
     private void select(int index) {
         int next = Math.floorMod(index, MenuSelection.Action.values().length);
         if (next != selection.getSelectedIndex()) {
@@ -123,6 +129,7 @@ public final class MenuController {
         }
     }
 
+    /** เรียกคำสั่งของรายการเมนูที่เลือกอยู่ */
     private void activate() {
         audio.playSfx(AudioManager.MENU_SELECT);
         switch (selection.selected()) {
@@ -132,16 +139,19 @@ public final class MenuController {
         }
     }
 
+    /** เปลี่ยนรายการที่เลือกตามตำแหน่งเมาส์ */
     private void updateHover(double x, double y) {
         if (x >= 316 && x <= 500 && y >= 290 && y <= 452) {
             select(Math.min(2, Math.max(0, (int) ((y - 290) / 54))));
         }
     }
 
+    /** ตรวจว่าตำแหน่งเมาส์อยู่ในแถบปรับเสียงหรือไม่ */
     private boolean inMeter(double x, double y, double rowY) {
         return x >= 36 && x <= 226 && y >= rowY - 9 && y <= rowY + 22;
     }
 
+    /** แปลงตำแหน่งเมาส์เป็นระดับเสียงเพลงหรือเอฟเฟกต์ */
     private void updateMeter(double x, boolean music) {
         int volume = (int) Math.round(Math.max(0, Math.min(1, (x - 42) / 140)) * 10);
         if (music) audio.setBgmVolume(volume);
@@ -151,6 +161,7 @@ public final class MenuController {
         }
     }
 
+    /** วาดพื้นหลัง เมนู และแผงควบคุมเสียง */
     private void draw(GraphicsContext gc, double elapsed) {
         gc.setImageSmoothing(false);
         gc.setFill(ScaledRoot.VOID_VIOLET);
@@ -167,6 +178,7 @@ public final class MenuController {
         PixelFont.draw(gc, "V1.0", 720, 680, 1, ScaledRoot.FROST_WHITE);
     }
 
+    /** วาดชื่อเกมและภาพเคลื่อนไหวตกแต่งส่วนหัว */
     private void drawTitle(GraphicsContext gc, double elapsed, double intro) {
         String title = GAME_TITLE.toUpperCase();
         double x = (800 - title.length() * 30) / 2;
@@ -190,6 +202,7 @@ public final class MenuController {
         }
     }
 
+    /** วาดรายการเมนูหนึ่งรายการและสถานะการเลือก */
     private void drawMenuButton(GraphicsContext gc, String text, double y, int index, double intro) {
         y += (1 - intro) * 55;
         boolean selected = selection.getSelectedIndex() == index;
@@ -208,6 +221,7 @@ public final class MenuController {
         gc.fillText(text, x + 22, y + 29);
     }
 
+    /** วาดแผงระดับเสียงและแถวควบคุมเพลงกับเอฟเฟกต์ */
     private void drawVolumePanel(GraphicsContext gc, double intro) {
         gc.save();
         gc.translate(0, (1 - intro) * 75);
@@ -241,6 +255,7 @@ public final class MenuController {
         if (muted) gc.strokeLine(196, y + 8, 214, y + 24);
     }
 
+    /** วาดดาวพื้นหลังที่เคลื่อนตามเวลาของเมนู */
     private void drawStars(GraphicsContext gc, double elapsed) {
         for (int i = 0; i < 80; i++) {
             double parallax = i < 48 ? 1.0 : 0.45;
@@ -252,6 +267,7 @@ public final class MenuController {
         }
     }
 
+    /** วาดเส้นสแกนและแสงเคลื่อนเพื่อเพิ่มบรรยากาศภาพ */
     private void drawScanlines(GraphicsContext gc, double elapsed) {
         gc.setFill(Color.color(1, 1, 1, 0.025));
         for (int y = 0; y < 720; y += 5) gc.fillRect(0, y, 800, 1);

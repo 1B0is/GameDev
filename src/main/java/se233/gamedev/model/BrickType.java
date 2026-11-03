@@ -15,6 +15,8 @@ public enum BrickType {
         this.score = score;
     }
 
+    /** คืนจำนวนครั้งที่ต้องชนเพื่อทำลายอิฐชนิดนี้ */
     public int getHitPoints() { return hitPoints; }
+    /** คืนคะแนนที่ได้จากอิฐชนิดนี้ */
     public int getScore() { return score; }
 }

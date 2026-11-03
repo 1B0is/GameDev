@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Non-blocking JavaFX music and synthesized sound-effect playback. */
+/** จัดการการเล่นเพลงและเสียงเอฟเฟกต์ผ่าน JavaFX โดยไม่บล็อกเธรดหลัก */
 public final class AudioManager {
     public static final String MENU_MOVE = "menu_move";
     public static final String MENU_SELECT = "menu_select";
@@ -28,6 +28,7 @@ public final class AudioManager {
     private String activeTrack;
     private Timeline crossfade;
 
+    /** เตรียมการตั้งค่าเสียงและสร้างเสียงเอฟเฟกต์เริ่มต้น */
     private AudioManager(AudioSettings settings) {
         this.settings = settings;
         try {
@@ -40,35 +41,37 @@ public final class AudioManager {
         activeTrack = null;
     }
 
+    /** คืนตัวจัดการเสียงส่วนกลางของเกม */
     public static AudioManager getInstance() { return INSTANCE; }
+    /** คืนการตั้งค่าระดับเสียงปัจจุบัน */
     public AudioSettings getSettings() { return settings; }
 
-    /** Starts or crossfades to the looping menu track. */
+    /** เล่นหรือค่อย ๆ เปลี่ยนไปยังเพลงวนซ้ำของเมนู */
     public void playMenuMusic() { crossfadeTo("/se233/gamedev/audio/NEON.m4a"); }
-    /** Starts or crossfades to the looping game-session track. */
+    /** เล่นหรือค่อย ๆ เปลี่ยนไปยังเพลงวนซ้ำระหว่างเล่นเกม */
     public void playGameMusic() { crossfadeTo("/se233/gamedev/audio/RED.mp3"); }
 
-    /** Applies music volume immediately and persists the new ten-step setting. */
+    /** เปลี่ยนระดับเสียงเพลงและปรับเสียงที่กำลังเล่นทันที */
     public void setBgmVolume(int volume) {
         settings.setBgmVolume(volume);
         applyVolumes();
     }
 
-    /** Applies effects volume immediately and persists the new ten-step setting. */
+    /** เปลี่ยนระดับเสียงเอฟเฟกต์สำหรับเสียงที่จะเล่นต่อไป */
     public void setSfxVolume(int volume) {
         settings.setSfxVolume(volume);
     }
 
-    /** Toggles music mute and applies the effective volume. */
+    /** สลับปิดเสียงเพลงและปรับระดับเสียงที่มีผล */
     public void muteBgm() {
         settings.toggleBgmMuted();
         applyVolumes();
     }
 
-    /** Toggles sound-effect mute. */
+    /** สลับปิดเสียงเอฟเฟกต์ */
     public void muteSfx() { settings.toggleSfxMuted(); }
 
-    /** Plays a named effect when available and not muted. */
+    /** เล่นเอฟเฟกต์ตามชื่อเมื่อมีเสียงและไม่ได้ปิดเสียงไว้ */
     public void playSfx(String name) {
         if (settings.getEffectiveSfxVolume() == 0) return;
         int index = switch (name) {
@@ -83,7 +86,7 @@ public final class AudioManager {
         }
     }
 
-    /** Stops playback and releases all JavaFX audio resources on application exit. */
+    /** หยุดเสียงและคืนทรัพยากรเสียงเมื่อปิดแอปพลิเคชัน */
     public void dispose() {
         if (crossfade != null) crossfade.stop();
         for (int i = 0; i < players.length; i++) {
@@ -95,6 +98,7 @@ public final class AudioManager {
         }
     }
 
+    /** โหลดเพลงและค่อย ๆ ปรับระดับเสียงเพื่อเปลี่ยนแทร็ก */
     private void crossfadeTo(String resource) {
         if (resource.equals(activeTrack)) return;
         if (crossfade != null) crossfade.stop();
@@ -143,16 +147,19 @@ public final class AudioManager {
         crossfade.play();
     }
 
+    /** ใช้ระดับเสียงเพลงปัจจุบันกับแทร็กที่กำลังเล่น */
     private void applyVolumes() {
         if (activePlayer >= 0 && players[activePlayer] != null) {
             players[activePlayer].setVolume(settings.getEffectiveBgmVolume());
         }
     }
 
+    /** คืนรายละเอียดข้อผิดพลาดของตัวเล่นเพลง */
     private static String nextPlayerError(MediaPlayer player) {
         return player.getError() == null ? "unknown media error" : player.getError().getMessage();
     }
 
+    /** คัดลอกไฟล์เสียงจาก classpath ไปยังไฟล์ชั่วคราวสำหรับ JavaFX */
     private static Path extract(String resource) throws IOException {
         try (InputStream stream = AudioManager.class.getResourceAsStream(resource)) {
             if (stream == null) throw new IOException("Missing classpath audio resource " + resource);
@@ -164,6 +171,7 @@ public final class AudioManager {
         }
     }
 
+    /** สร้างเสียงโทนสั้นเป็นไฟล์ WAV ชั่วคราวแล้วคืน AudioClip */
     private AudioClip createTone(int frequency, int durationMillis) throws IOException {
         int sampleRate = 22050;
         int samples = sampleRate * durationMillis / 1000;
@@ -193,6 +201,7 @@ public final class AudioManager {
         return new AudioClip(wav.toUri().toString());
     }
 
+    /** เขียนค่าทีละไบต์ตามลำดับ little-endian ลงในสตรีม */
     private static void writeLittleEndian(java.io.OutputStream output, int value, int bytes)
             throws IOException {
         for (int i = 0; i < bytes; i++) output.write(value >>> (8 * i) & 0xff);

@@ -10,6 +10,7 @@ public final class GameErrorHandler {
         /** ทำงานหนึ่งรายการที่อาจเกิดข้อยกเว้นตามกฎเกม */
         void run() throws GameException;
     }
+    /** ป้องกันการสร้างออบเจ็กต์จากคลาสจัดการข้อผิดพลาด */
     private GameErrorHandler(){}
     /** เรียกการทำงานและคืนผลสำเร็จหรือบันทึกข้อผิดพลาดแล้วคืน false */
     public static boolean run(GameAction action){

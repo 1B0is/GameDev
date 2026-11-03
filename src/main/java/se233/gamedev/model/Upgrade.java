@@ -5,8 +5,11 @@ public final class Upgrade {
     private final UpgradeType type;
     /** สร้างตัวเลือกอัปเกรดและปฏิเสธชนิดที่เป็นค่าว่าง */
     public Upgrade(UpgradeType type){this.type=Objects.requireNonNull(type,"type");}
+    /** คืนชนิดของอัปเกรด */
     public UpgradeType getType(){return type;}
+    /** คืนชื่ออัปเกรดสำหรับแสดงผล */
     public String getName(){return type.getDisplayName();}
+    /** คืนคำอธิบายผลของอัปเกรด */
     public String getDescription(){return type.getDescription();}
     /** เปรียบเทียบตัวเลือกจากชนิดอัปเกรด */
     @Override

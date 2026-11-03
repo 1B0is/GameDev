@@ -21,6 +21,7 @@ public final class MeteorHitGuard {
         return remainingSeconds <= 0;
     }
 
+    /** ตรวจว่าผู้เล่นยังอยู่ในช่วงคุ้มกันหลังถูกอุกกาบาตหรือไม่ */
     public boolean isInvulnerable() {
         return !canBeHit();
     }

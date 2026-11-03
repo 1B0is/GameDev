@@ -9,6 +9,4 @@ public final class GameBounds {
     public static final double BALL_START_Y = 638;
     public static final double BRICK_START_Y = 126;
 
-    private GameBounds() {
-    }
 }

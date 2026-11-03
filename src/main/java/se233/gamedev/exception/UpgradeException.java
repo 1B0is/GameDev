@@ -1,7 +1,8 @@
 package se233.gamedev.exception;
 
-/** Indicates an error while selecting, applying, or rerolling an upgrade. */
+/** ระบุข้อผิดพลาดระหว่างเลือก ใช้ หรือสุ่มอัปเกรดใหม่ */
 public final class UpgradeException extends GameException {
+    /** สร้างข้อผิดพลาดเกี่ยวกับการจัดการอัปเกรด */
     public UpgradeException(String message) {
         super(message);
     }

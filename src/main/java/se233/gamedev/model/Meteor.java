@@ -6,10 +6,12 @@ public final class Meteor extends GameObject {
     public static final double WIDTH = 36;
     public static final double HEIGHT = 72;
 
+    /** สร้างอุกกาบาตโดยกำหนดจุดกึ่งกลางแนวนอนและตำแหน่งเริ่มต้น */
     public Meteor(double centerX, double startY) {
         super(centerX - WIDTH / 2, startY, WIDTH, HEIGHT);
     }
 
+    /** คืนความเร็วแนวดิ่งของอุกกาบาต */
     public double getVelocityY() {
         return FALL_SPEED;
     }
@@ -20,6 +22,7 @@ public final class Meteor extends GameObject {
         setY(getY() + FALL_SPEED * dtSeconds);
     }
 
+    /** ตรวจว่าอุกกาบาตเคลื่อนพ้นขอบล่างของสนามแล้วหรือไม่ */
     public boolean isBelowField(double fieldHeight) {
         return getY() > fieldHeight;
     }

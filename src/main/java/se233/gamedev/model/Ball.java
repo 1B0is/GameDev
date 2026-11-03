@@ -13,8 +13,11 @@ public final class Ball extends GameObject {
         super(x, y, diameter, diameter);
     }
 
+    /** คืนความเร็วของลูกบอลตามแนวนอน */
     public double getVelocityX() { return velocityX; }
+    /** คืนความเร็วของลูกบอลตามแนวตั้ง */
     public double getVelocityY() { return velocityY; }
+    /** ตรวจว่าลูกบอลถูกปล่อยให้เคลื่อนที่แล้วหรือยัง */
     public boolean isLaunched() { return launched; }
 
     /** กำหนดความเร็วทั้งสองแกนและทำเครื่องหมายว่าลูกบอลเริ่มเคลื่อนที่ */
@@ -26,7 +29,7 @@ public final class Ball extends GameObject {
 
     /** ปล่อยลูกบอลด้วยความเร็วเริ่มต้นแนวทแยงตามค่ามาตรฐาน */
     public void launch() {
-        launch(3.2, -4.4);
+        launch(3.2, -6.4);
     }
 
     /** ปล่อยลูกบอลด้วยความเร็วที่ผู้เรียกกำหนด หากยังไม่เคยปล่อย */

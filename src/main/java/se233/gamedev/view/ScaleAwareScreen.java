@@ -1,7 +1,7 @@
 package se233.gamedev.view;
 
-/** Allows a screen containing a Canvas to adapt its backing pixel dimensions to viewport scale. */
+/** กำหนดสัญญาให้หน้าจอที่มี Canvas ปรับขนาดตามสเกล viewport ได้ */
 public interface ScaleAwareScreen {
-    /** Applies the current real-window to logical-screen scale factor. */
+    /** รับค่าสเกลระหว่างหน้าต่างจริงกับหน้าจอเชิงตรรกะ */
     void setViewportScale(double scale);
 }

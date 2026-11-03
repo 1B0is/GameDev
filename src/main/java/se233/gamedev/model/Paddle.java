@@ -17,8 +17,7 @@ public final class Paddle extends GameObject {
     public void moveLeft(double frameScale) {
         setX(Math.max(0, getX() - speed * frameScale));
     }
-
-    /** เลื่อนไม้พายไปทางขวาตามสเกลเวลาและจำกัดไม่ให้ออกนอกสนาม */
+    /** เลื่อนไม้พายไปทางขวาตามสเกลเวลาและจำกัดให้อยู่ในสนาม */
     public void moveRight(double frameScale) {
         setX(Math.min(fieldWidth - getWidth(), getX() + speed * frameScale));
     }

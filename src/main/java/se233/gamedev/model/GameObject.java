@@ -16,16 +16,22 @@ public abstract class GameObject {
     }
 
 
+    /** คืนพิกัดแนวนอนของวัตถุ */
     public double getX() { return x; }
 
+    /** คืนพิกัดแนวตั้งของวัตถุ */
     public double getY() { return y; }
 
+    /** คืนความกว้างของวัตถุ */
     public double getWidth() { return width; }
 
+    /** คืนความสูงของวัตถุ */
     public double getHeight() { return height; }
 
+    /** กำหนดพิกัดแนวนอนของวัตถุ */
     public void setX(double x) { this.x = x; }
 
+    /** กำหนดพิกัดแนวตั้งของวัตถุ */
     public void setY(double y) { this.y = y; }
 
     /** กำหนดความกว้าง โดยปฏิเสธค่าที่ไม่เป็นบวก */

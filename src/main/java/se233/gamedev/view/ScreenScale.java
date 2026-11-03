@@ -1,9 +1,9 @@
 package se233.gamedev.view;
 
-/** Pure logical-screen scaling math shared by all application screens. */
+/** คำนวณการปรับขนาดหน้าจอเชิงตรรกะที่ใช้ร่วมกันทุกหน้าจอ */
 public record ScreenScale(double scale, double offsetX, double offsetY,
                           double width, double height) {
-    /** Computes a centered uniform scale that keeps the logical screen inside the window. */
+    /** คำนวณสเกลแบบคงสัดส่วนและจัดหน้าจอไว้กึ่งกลางหน้าต่าง */
     public static ScreenScale compute(double windowWidth, double windowHeight,
                                       double logicalWidth, double logicalHeight) {
         if (!(windowWidth > 0) || !(windowHeight > 0)

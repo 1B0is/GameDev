@@ -15,15 +15,12 @@ public final class WarningPopupRenderer {
     public static final double HEADER_BLINK_HERTZ = 2;
     public static final double GLITCH_INTERVAL_SECONDS = 1.8;
     public static final double FLICKER_MIN_INTERVAL_SECONDS = 0.5;
-    public static final double FLICKER_MAX_INTERVAL_SECONDS = 2.0;
 
     private static final double WIDTH = GameBounds.FIELD_WIDTH * WIDTH_RATIO;
     private static final double HEIGHT = GameBounds.FIELD_HEIGHT * HEIGHT_RATIO;
     private static final double STRIPE_HEIGHT = 9;
     private static final double STRIPE_WIDTH = 18;
 
-    private WarningPopupRenderer() {
-    }
 
     /** วาดฉากมืด หน้าต่างเตือน รายละเอียด และเอฟเฟกต์ตามเวลาจำลอง */
     public static void draw(GraphicsContext gc, WeatherType weather, WeatherTheme theme,
@@ -328,6 +325,7 @@ public final class WarningPopupRenderer {
     }
 
     /** เพิ่มเส้นสแกนจาง ๆ ทับบริเวณภายในหน้าต่าง */
+    /** วาดเส้นสแกนโปร่งแสงทับรายละเอียดในหน้าต่าง */
     private static void drawScanlines(GraphicsContext gc, double x, double y, WeatherTheme theme) {
         gc.setFill(withAlpha(theme.popupText(), 0.035));
         for (double lineY = y + 56; lineY < y + HEIGHT - 18; lineY += 4) {
@@ -336,6 +334,7 @@ public final class WarningPopupRenderer {
     }
 
     /** ทำมุมหน้าต่างหมอกให้มืดลงด้วยบล็อกสีแบบขั้น */
+    /** เพิ่มขอบมืดรอบหน้าต่างเพื่อเน้นบรรยากาศหมอก */
     private static void drawVignette(GraphicsContext gc, double x, double y, WeatherTheme theme) {
         Color shadow = withAlpha(theme.popupOverlay(), 0.20);
         gc.setFill(shadow);
@@ -349,6 +348,7 @@ public final class WarningPopupRenderer {
     }
 
     /** คำนวณจังหวะไฟกะพริบของธีมหมอกแบบทำซ้ำได้ */
+    /** ตรวจว่าเวลาในปัจจุบันอยู่ในช่วงกะพริบของเอฟเฟกต์หรือไม่ */
     private static boolean isFlicker(double elapsed) {
         double cursor = 0;
         for (int cycle = 0; cursor <= elapsed; cycle++) {
@@ -362,6 +362,7 @@ public final class WarningPopupRenderer {
     }
 
     /** คำนวณการขยายเข้าแบบมีจังหวะเด้งเกินเล็กน้อย */
+    /** คำนวณความคืบหน้าแบบเด้งเล็กน้อยสำหรับแอนิเมชันเข้า */
     private static double easeOutBack(double progress) {
         double c1 = 1.70158;
         double c3 = c1 + 1;
@@ -370,6 +371,7 @@ public final class WarningPopupRenderer {
     }
 
     /** สร้างสีจากพาเลตต์เดิมพร้อมค่าความทึบที่กำหนด */
+    /** คืนสีเดิมโดยแทนค่าความโปร่งใสตามที่ระบุ */
     private static Color withAlpha(Color color, double alpha) {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(),
                 Math.max(0, Math.min(1, alpha)));

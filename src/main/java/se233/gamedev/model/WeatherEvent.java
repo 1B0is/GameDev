@@ -11,6 +11,7 @@ public final class WeatherEvent {
     private final WeatherType type;
     private boolean active;
 
+    /** สร้างเหตุการณ์พร้อมชนิดและสถานะเริ่มต้น */
     private WeatherEvent(WeatherType type, boolean active) {
         this.type = type;
         this.active = active;
@@ -34,15 +35,17 @@ public final class WeatherEvent {
         return new WeatherEvent(Objects.requireNonNull(type, "type"), true);
     }
 
+    /** คืนชนิดสภาพอากาศของเหตุการณ์นี้ */
     public WeatherType getType() {
         return type;
     }
 
+    /** ตรวจว่าเหตุการณ์สภาพอากาศยังทำงานอยู่หรือไม่ */
     public boolean isActive() {
         return active;
     }
 
-    /** Returns the weather multiplier only while this event is active. */
+    /** คืนตัวคูณคะแนนเมื่อเหตุการณ์ทำงาน มิฉะนั้นคืนค่าปกติ */
     public double getScoreMultiplier() {
         return active ? SCORE_MULTIPLIER : 1.0;
     }

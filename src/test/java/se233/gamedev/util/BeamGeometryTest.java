@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Verifies collision emitters align with the beam art at 8% and 92% of the paddle. */
+/** ตรวจว่าตำแหน่งหัวปล่อยลำแสงตรงกับภาพที่ร้อยละ 8 และ 92 ของไม้พาย */
 class BeamGeometryTest {
     @Test
     void emitsAtTheSamePositionsUsedByTheRenderer() {

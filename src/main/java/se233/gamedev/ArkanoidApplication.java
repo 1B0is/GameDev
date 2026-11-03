@@ -69,7 +69,7 @@ public final class ArkanoidApplication extends Application {
         root.show(menuController.createView());
     }
 
-    /** Displays instructions inside the shared scaled scene. */
+    /** แสดงหน้าคำแนะนำภายใน Scene ที่ปรับขนาดร่วมกัน */
     private void showHowToPlay() {
         stopMenuAndUpgrade();
         root.show(new HowToPlayController(this::showMenu).createView());
@@ -115,6 +115,7 @@ public final class ArkanoidApplication extends Application {
         }
     }
 
+    /** หยุดตัวควบคุมเมนูและอัปเกรดก่อนเปลี่ยนหน้าจอ */
     private void stopMenuAndUpgrade() {
         if (menuController != null) {
             menuController.stop();

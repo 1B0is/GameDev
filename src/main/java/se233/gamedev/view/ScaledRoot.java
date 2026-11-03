@@ -7,7 +7,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.transform.Scale;
 import se233.gamedev.model.GameBounds;
 
-/** Centers and uniformly scales a fixed-resolution screen inside the application window. */
+/** จัดกึ่งกลางและปรับขนาดหน้าจอความละเอียดคงที่ให้พอดีกับหน้าต่างเกม */
 public final class ScaledRoot extends Pane {
     public static final double LOGICAL_WIDTH = GameBounds.FIELD_WIDTH;
     public static final double LOGICAL_HEIGHT = GameBounds.FIELD_HEIGHT;
@@ -30,6 +30,7 @@ public final class ScaledRoot extends Pane {
     public static final Color MULTI_BALL_ACCENT = Color.web("#B879FF");
 
     private final Pane logicalLayer = new Pane() {
+        /** จัดขนาด child ที่เป็น Region ให้เต็มพื้นที่เชิงตรรกะ */
         @Override
         protected void layoutChildren() {
             for (var child : getChildren()) {
@@ -42,7 +43,7 @@ public final class ScaledRoot extends Pane {
     private final Scale scaleTransform = new Scale(1, 1, 0, 0);
     private Parent activeScreen;
 
-    /** Creates the fixed logical canvas layer and updates its fit when the window changes. */
+    /** สร้างชั้นหน้าจอขนาดคงที่และปรับสเกลตามขนาดหน้าต่าง */
     public ScaledRoot() {
         setStyle("-fx-background-color: #140B2E;");
         logicalLayer.setPrefSize(LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -54,7 +55,7 @@ public final class ScaledRoot extends Pane {
         heightProperty().addListener((observable, oldValue, newValue) -> updateScale());
     }
 
-    /** Replaces the active screen without replacing the application's Scene. */
+    /** เปลี่ยนหน้าจอปัจจุบันโดยคง Scene ของแอปพลิเคชันไว้ */
     public void show(Parent screen) {
         activeScreen = screen;
         logicalLayer.getChildren().setAll(screen);
@@ -68,6 +69,7 @@ public final class ScaledRoot extends Pane {
         updateScale();
     }
 
+    /** คำนวณสเกลและตำแหน่งกึ่งกลางใหม่เมื่อขนาดหน้าต่างเปลี่ยน */
     private void updateScale() {
         ScreenScale fit = ScreenScale.compute(Math.max(1, getWidth()), Math.max(1, getHeight()),
                 LOGICAL_WIDTH, LOGICAL_HEIGHT);

@@ -10,15 +10,17 @@ import se233.gamedev.view.PixelFont;
 import se233.gamedev.view.ScaledRoot;
 import se233.gamedev.view.WeatherTheme;
 
-/** Displays pixel-art controls and weather information. */
+/** แสดงคำแนะนำการควบคุมและข้อมูลสภาพอากาศ */
 public final class HowToPlayController {
     private final Runnable onBack;
     private final Canvas canvas = new Canvas(800, 720);
 
+    /** สร้างหน้าคำแนะนำพร้อมคำสั่งย้อนกลับไปเมนู */
     public HowToPlayController(Runnable onBack) {
         this.onBack = onBack;
     }
 
+    /** สร้างหน้าคำแนะนำและผูกปุ่มกลับไปเมนู */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(800, 720);
@@ -37,6 +39,7 @@ public final class HowToPlayController {
         return root;
     }
 
+    /** วาดปุ่มควบคุมและคำอธิบายสภาพอากาศ */
     private void draw(GraphicsContext gc) {
         gc.setImageSmoothing(false);
         gc.setFill(ScaledRoot.VOID_VIOLET);
@@ -79,6 +82,7 @@ public final class HowToPlayController {
         PixelFont.draw(gc, title, x + 24, y + 24, 2, ScaledRoot.ION_CYAN);
     }
 
+    /** วาดปุ่มคีย์บอร์ดตัวอย่างพร้อมกรอบ */
     private void drawKey(GraphicsContext gc, double x, double y, String label) {
         gc.setFill(ScaledRoot.PANEL_PLUM);
         gc.fillRect(x, y, label.length() > 1 ? 54 : 42, 42);

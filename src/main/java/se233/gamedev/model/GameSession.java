@@ -121,20 +121,30 @@ public final class GameSession {
     private List<Upgrade> generateUpgradeChoices(){
         return generateUpgradeChoices(Set.of());
     }
-    /** สุ่มตัวเลือกที่ไม่ซ้ำและยังไม่เคยได้รับ โดยเว้นชนิดที่ระบุไว้ */
+    /** สุ่มตัวเลือกที่ไม่ซ้ำ โดยเว้นอัปเกรดใช้ครั้งเดียวที่ได้รับแล้ว */
     private List<Upgrade> generateUpgradeChoices(Set<UpgradeType> exclude){
         List<UpgradeType> types=new ArrayList<>(List.of(UpgradeType.values()));
-        types.removeIf(type -> acquired.contains(type) || exclude.contains(type));
-        if(types.size()<Math.min(3, UpgradeType.values().length - acquired.size())){
+        types.removeIf(type -> (acquired.contains(type) && !type.isRepeatable())
+                || exclude.contains(type));
+        if(types.size()<Math.min(3, eligibleUpgradeCount())){
             types=new ArrayList<>(List.of(UpgradeType.values()));
-            types.removeIf(acquired::contains);
+            types.removeIf(type -> acquired.contains(type) && !type.isRepeatable());
         }
         Collections.shuffle(types,random);
         return types.subList(0,Math.min(3,types.size())).stream().map(Upgrade::new).toList();
     }
+    /** นับอัปเกรดที่ยังเลือกได้ รวมชนิดที่ได้รับซ้ำได้แล้ว */
+    private long eligibleUpgradeCount(){
+        return java.util.Arrays.stream(UpgradeType.values())
+                .filter(type -> !acquired.contains(type) || type.isRepeatable())
+                .count();
+    }
     /** เพิ่มอัปเกรดที่เลือกลงในรอบเกมและปรับค่าความสามารถที่เกี่ยวข้อง */
     private void apply(UpgradeType type) throws UpgradeException {
-        if(!acquired.add(type))throw new UpgradeException("Upgrade already acquired: "+type.getDisplayName());
+        if(acquired.contains(type) && !type.isRepeatable()) {
+            throw new UpgradeException("Upgrade already acquired: "+type.getDisplayName());
+        }
+        acquired.add(type);
         switch(type){
             case WIDE_PADDLE -> paddleWidthMultiplier*=type.getMultiplier();
             case EXTRA_LIFE -> lives++;
@@ -166,26 +176,42 @@ public final class GameSession {
             GameLogger.gameEvent("Weather ended: "+weatherEvent.getType()+" on stage "+stageNumber);
         }
     }
+    /** คืนจำนวนครั้งที่บอลชนอิฐต่อเนื่องในคอมโบปัจจุบัน */
     public int getComboStreak(){return comboStreak;}
+    /** คำนวณตัวคูณคะแนนจากจำนวนคอมโบที่สะสมได้ */
     public double getComboMultiplier(){
         int comboSteps=Math.min(comboStreak/COMBO_STEP,MAX_COMBO_STEPS);
         return 1.0+comboSteps*COMBO_BONUS_PER_STEP;
     }
+    /** คืนคะแนนสะสมของรอบเกม */
     public int getScore(){return score;}
+    /** คืนจำนวนชีวิตที่เหลือ */
     public double getLives(){return lives;}
+    /** คืนหมายเลขด่านปัจจุบัน */
     public int getStageNumber(){return stageNumber;}
+    /** คืนจำนวนด่านทั้งหมดของรอบเกม */
     public int getTotalStages(){return totalStages;}
+    /** คืนข้อมูลด่านปัจจุบัน */
     public Stage getStage(){return stage;}
+    /** คืนสถานะปัจจุบันของรอบเกม */
     public GameState getState(){return state;}
+    /** คืนรายการอัปเกรดที่กำลังเสนอให้เลือก */
     public List<Upgrade> getOfferedUpgrades(){return offered;}
+    /** คืนชุดอัปเกรดที่ได้รับแล้วในรูปแบบอ่านอย่างเดียว */
     public Set<UpgradeType> getAcquiredUpgrades(){return Collections.unmodifiableSet(acquired);}
+    /** คืนตัวคูณความกว้างไม้พายจากอัปเกรด */
     public double getPaddleWidthMultiplier(){return paddleWidthMultiplier;}
-    public double getScoreMultiplier(){return scoreMultiplier;}
+    /** คืนตัวคูณความเร็วบอลจากอัปเกรด */
     public double getBallSpeedMultiplier(){return ballSpeedMultiplier;}
+    /** คืนจำนวนครั้งที่ยังสุ่มข้อเสนออัปเกรดใหม่ได้ */
     public int getRerollsRemaining(){return rerollsRemaining;}
+    /** คืนจำนวนบอลเพิ่มเติมจากอัปเกรดมัลติบอล */
     public int getAdditionalBallCount(){return additionalBallCount;}
+    /** ตรวจว่าได้รับอัปเกรดชนิดที่ระบุแล้วหรือไม่ */
     public boolean hasUpgrade(UpgradeType type){return acquired.contains(type);}
+    /** คืนเหตุการณ์สภาพอากาศของด่าน หากมี */
     public Optional<WeatherEvent> getWeatherEvent(){return Optional.ofNullable(weatherEvent);}
+    /** คืนตัวคูณคะแนนจากสภาพอากาศปัจจุบัน */
     public double getWeatherScoreMultiplier(){
         return weatherEvent==null?1.0:weatherEvent.getScoreMultiplier();
     }

@@ -94,42 +94,54 @@ public final class Stage {
     /** รูปแบบผังที่เว้นช่องได้ แต่ไม่สร้างอิฐที่ถูกปิดล้อม */
     private enum Pattern {
         SOLID {
+            /** กำหนดให้ทุกตำแหน่งในผังมีอิฐ */
             @Override boolean contains(int row, int column, int rows, Random random, int stage) {
                 return true;
             }
         },
         CHECKERBOARD {
+            /** สลับตำแหน่งอิฐแบบกระดานหมากรุกโดยคงแถวบนสุดไว้ */
             @Override boolean contains(int row, int column, int rows, Random random, int stage) {
                 return row == 0 || (row + column) % 2 == 0;
             }
         },
         PYRAMID {
+            /** วางอิฐเป็นรูปพีระมิดโดยขยายตามลำดับแถว */
             @Override boolean contains(int row, int column, int rows, Random random, int stage) {
                 return Math.abs(column - (COLUMNS - 1) / 2.0) <= row + 1;
             }
         },
         GAPPED_COLUMNS {
+            /** เว้นบางคอลัมน์สลับแถวเพื่อสร้างช่องในผังอิฐ */
             @Override boolean contains(int row, int column, int rows, Random random, int stage) {
                 return column % Math.max(2, 5 - Math.min(stage, 3)) != 0 || row % 2 == 0;
             }
         },
         RANDOM_SCATTER {
+            /** สุ่มตำแหน่งอิฐโดยเพิ่มความหนาแน่นตามด่าน */
             @Override boolean contains(int row, int column, int rows, Random random, int stage) {
                 return random.nextDouble() < Math.min(0.92, 0.62 + stage * 0.05);
             }
         };
 
+        /** ตรวจว่ารูปแบบปัจจุบันกำหนดให้สร้างอิฐในตำแหน่งนี้หรือไม่ */
         abstract boolean contains(int row, int column, int rows, Random random, int stage);
     }
 
+    /** คืนจำนวนด่านทั้งหมดของเกม */
     public int getTotalStages(){return totalStages;}
+    /** คืนจำนวนแถวอิฐของด่านนี้ */
     public int getRows(){return BASE_ROWS + (number - 1) * ROWS_PER_STAGE;}
+    /** คืนจำนวนคอลัมน์อิฐของด่าน */
     public int getColumns(){return COLUMNS;}
+    /** คืนจำนวนอิฐที่ต้องทำลายเพื่อผ่านด่าน */
     public int getBrickGoal(){return brickGoal;}
-    /** Prevents callers from changing the stage's brick collection. */
+    /** คืนรายการอิฐแบบอ่านอย่างเดียวเพื่อป้องกันการแก้ไขจากภายนอก */
     public List<Brick> getBricks(){return Collections.unmodifiableList(bricks);}
     /** บันทึกการทำลายอิฐหนึ่งก้อนและคืน false หากเป้าหมายครบแล้ว */
     public boolean recordBrickDestroyed(){if(bricksDestroyed>=brickGoal)return false;bricksDestroyed++;return true;}
+    /** ตรวจว่าทำลายอิฐครบเป้าหมายของด่านแล้วหรือไม่ */
     public boolean isCleared(){return bricksDestroyed>=brickGoal;}
+    /** ตรวจว่าด่านนี้เป็นด่านสุดท้ายของเกมหรือไม่ */
     public boolean isFinalStage(){return number==totalStages;}
 }

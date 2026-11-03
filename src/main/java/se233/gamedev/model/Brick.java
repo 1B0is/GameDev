@@ -12,9 +12,13 @@ public final class Brick extends GameObject {
         hitPoints = type.getHitPoints();
     }
 
+    /** คืนชนิดของอิฐ */
     public BrickType getType() { return type; }
+    /** คืนพลังชีวิตที่เหลือของอิฐ */
     public int getHitPoints() { return hitPoints; }
+    /** คืนคะแนนที่จะได้รับเมื่อทำลายอิฐ */
     public int getScoreValue() { return type.getScore(); }
+    /** ตรวจว่าอิฐถูกทำลายแล้วหรือไม่ */
     public boolean isDestroyed() { return hitPoints == 0; }
 
     /** ลดพลังชีวิตหนึ่งหน่วย และคืนค่า true เมื่ออิฐถูกทำลาย */

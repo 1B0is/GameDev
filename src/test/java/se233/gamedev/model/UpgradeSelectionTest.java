@@ -28,7 +28,7 @@ class UpgradeSelectionTest {
         assertEquals(GameState.UPGRADE,game.getState());
     }
 
-    /** ตรวจจำนวนครั้งสุ่มซ้ำและการไม่นำอัปเกรดที่ได้รับแล้วมาเสนอ */
+    /** ตรวจจำนวนครั้งสุ่มซ้ำและการแสดงอัปเกรดซ้ำได้หลังได้รับแล้ว */
     @Test void rerollsAreLimitedAndChoicesExcludeAcquiredUpgrades() throws GameException {
         GameSession game=new GameSession(2,3,new java.util.Random(19));
         game.start();
@@ -41,12 +41,21 @@ class UpgradeSelectionTest {
         game.chooseUpgrade(0);
         UpgradeType acquired=game.getAcquiredUpgrades().iterator().next();
         game.clearStage();
-        assertFalse(game.getOfferedUpgrades().stream()
-                .anyMatch(upgrade->upgrade.getType()==acquired));
+        if (!acquired.isRepeatable()) {
+            assertFalse(game.getOfferedUpgrades().stream()
+                    .anyMatch(upgrade->upgrade.getType()==acquired));
+        }
         game.rerollUpgrades();
         game.rerollUpgrades();
         assertEquals(0,game.getRerollsRemaining());
         assertThrows(UpgradeException.class,game::rerollUpgrades);
+    }
+
+    /** ตรวจว่าอัปเกรดเพิ่มไม้พาย คะแนน และความเร็วบอลได้รับซ้ำได้ */
+    @Test void repeatableUpgradesCanBeAppliedMoreThanOnce() throws GameException {
+        assertRepeatableUpgradeStacks(UpgradeType.WIDE_PADDLE);
+        assertRepeatableUpgradeStacks(UpgradeType.POWER_BALL);
+        assertRepeatableUpgradeStacks(UpgradeType.QUICK_BALL);
     }
 
     /** ตรวจผลของอัปเกรดมัลติบอลและบอลทะลุอิฐ */
@@ -84,6 +93,7 @@ class UpgradeSelectionTest {
                 game.getBallSpeedMultiplier(),1e-9);
         assertTrue(game.hasUpgrade(UpgradeType.QUICK_BALL));
     }
+    /** ค้นหา seed ที่ทำให้อัปเกรดชนิดที่กำหนดปรากฏในข้อเสนอ */
     private static GameSession findOffer(UpgradeType type) throws GameException {
         for(long seed=0;seed<100;seed++){
             GameSession game=new GameSession(2,3,new java.util.Random(seed));
@@ -96,7 +106,43 @@ class UpgradeSelectionTest {
         throw new AssertionError();
     }
 
+    /** คืนตำแหน่งของอัปเกรดชนิดที่ระบุในรายการข้อเสนอ */
     private static int indexOf(GameSession game,UpgradeType type){
         return game.getOfferedUpgrades().stream().map(Upgrade::getType).toList().indexOf(type);
+    }
+
+    /** ค้นหาเกมทดสอบที่เสนออัปเกรดซ้ำได้ในด่านถัดไป แล้วตรวจการสะสมผล */
+    private static void assertRepeatableUpgradeStacks(UpgradeType type) throws GameException {
+        for (long seed = 0; seed < 100; seed++) {
+            GameSession game = new GameSession(2, 4, new java.util.Random(seed));
+            game.start();
+            game.clearStage();
+            int firstIndex = indexOf(game, type);
+            if (firstIndex < 0) continue;
+
+            game.chooseUpgrade(firstIndex);
+            double firstMultiplier = effectiveMultiplier(game, type);
+            game.clearStage();
+            int secondIndex = indexOf(game, type);
+            if (secondIndex < 0) continue;
+
+            game.chooseUpgrade(secondIndex);
+            double secondMultiplier = effectiveMultiplier(game, type);
+            assertEquals(firstMultiplier * type.getMultiplier(), secondMultiplier, 0.001);
+            return;
+        }
+        fail("No deterministic seed offered " + type + " twice");
+    }
+
+    /** อ่านตัวคูณจริงของอัปเกรด รวมการวัดคะแนนผ่านคะแนนที่ได้รับ */
+    private static double effectiveMultiplier(GameSession game, UpgradeType type)
+            throws GameException {
+        return switch (type) {
+            case WIDE_PADDLE -> game.getPaddleWidthMultiplier();
+            case POWER_BALL -> game.addScore(10_000) / 10_000.0
+                    / game.getWeatherScoreMultiplier();
+            case QUICK_BALL -> game.getBallSpeedMultiplier();
+            default -> throw new IllegalArgumentException("Upgrade is not repeatable: " + type);
+        };
     }
 }

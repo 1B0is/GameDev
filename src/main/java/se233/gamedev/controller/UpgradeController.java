@@ -23,7 +23,7 @@ import se233.gamedev.view.ScaledRoot;
 import java.util.List;
 import java.util.Set;
 
-/** Presents upgrade modules and forwards confirmed choices to the unchanged game rules. */
+/** แสดงตัวเลือกอัปเกรดและส่งผลการเลือกไปยังกฎเกม */
 public final class UpgradeController {
     public static final boolean REDUCE_MOTION = false;
     private static final double CARD_WIDTH = 205;
@@ -42,6 +42,7 @@ public final class UpgradeController {
     private UpgradeType hoveredOwnedType;
     private AnimationTimer loop;
 
+    /** เตรียมหน้าจออัปเกรดจากเซสชันเกมและภาพพื้นหลังที่ได้รับ */
     public UpgradeController(GameSession session,
                              java.util.function.Consumer<GameSession> onContinue,
                              Image gameplayBackdrop) {
@@ -51,6 +52,7 @@ public final class UpgradeController {
         selection = new UpgradeSelectionState(session.getOfferedUpgrades());
     }
 
+    /** สร้างหน้าการ์ดอัปเกรดและติดตั้งการควบคุมด้วยเมาส์กับคีย์บอร์ด */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(800, 720);
@@ -78,6 +80,7 @@ public final class UpgradeController {
             if (scene != null) Platform.runLater(canvas::requestFocus);
         });
         loop = new AnimationTimer() {
+            /** อัปเดตสถานะการเลือกและวาดการ์ดตามเวลาของเฟรม */
             @Override
             public void handle(long now) {
                 double dt = previousFrame == 0 ? 0
@@ -91,10 +94,12 @@ public final class UpgradeController {
         return root;
     }
 
+    /** หยุดลูปแอนิเมชันเมื่อออกจากหน้าจออัปเกรด */
     public void stop() {
         if (loop != null) loop.stop();
     }
 
+    /** แปลปุ่มเป็นการเลือก ยืนยัน หรือสุ่มการ์ดใหม่ */
     private void onKey(KeyCode code) {
         if (code == KeyCode.A || code == KeyCode.LEFT) select(selection.getSelectedIndex() - 1);
         else if (code == KeyCode.D || code == KeyCode.RIGHT) {
@@ -103,6 +108,7 @@ public final class UpgradeController {
         else if (code == KeyCode.R) reroll();
     }
 
+    /** เปลี่ยนการ์ดที่เลือกและเล่นเสียงตอบสนอง */
     private void select(int index) {
         if (!selection.isInputEnabled()) return;
         int before = selection.getSelectedIndex();
@@ -111,6 +117,7 @@ public final class UpgradeController {
         if (before != selection.getSelectedIndex()) audio.playSfx(AudioManager.MENU_MOVE);
     }
 
+    /** ยืนยันอัปเกรดที่เลือกและเริ่มแอนิเมชันยืนยัน */
     private void confirm() {
         Upgrade choice = selection.confirm();
         if (choice == null) return;
@@ -118,9 +125,7 @@ public final class UpgradeController {
         confirmElapsed = 0;
         audio.playSfx(AudioManager.MENU_SELECT);
     }
-
-
-    /* ยืนยัน/reroll พร้อม state/animation ส่งกลับเข้าหน้าเกม */
+    /** สุ่มข้อเสนอใหม่เมื่อยังมีสิทธิ์และเปิดรับ input */
     private void reroll() {
         if (!selection.isInputEnabled() || session.getRerollsRemaining() == 0) return;
         if (GameErrorHandler.run(session::rerollUpgrades)) {
@@ -129,6 +134,7 @@ public final class UpgradeController {
         }
     }
 
+    /** อัปเดตแอนิเมชันและใช้การอัปเกรดหลังยืนยันครบเวลา */
     private void update(double dt) {
         selection.update(dt);
         if (pendingConfirm == null) return;
@@ -143,6 +149,7 @@ public final class UpgradeController {
         }
     }
 
+    /** คืนดัชนีการ์ดที่ตำแหน่งเมาส์ หรือ -1 หากไม่อยู่บนการ์ด */
     private int cardAt(double x, double y) {
         double startX = (800 - selection.getOffers().size() * CARD_WIDTH
                 - Math.max(0, selection.getOffers().size() - 1) * CARD_GAP) / 2;
@@ -152,9 +159,7 @@ public final class UpgradeController {
         }
         return -1;
     }
-
-
-    /* วาดภาพหน้า upgrade */
+    /** วาดพื้นหลัง การ์ด รายการอัปเกรด และคำสั่ง */
     private void draw(GraphicsContext gc) {
         gc.setImageSmoothing(false);
         gc.setFill(ScaledRoot.VOID_VIOLET);
@@ -171,6 +176,7 @@ public final class UpgradeController {
         drawFooter(gc);
     }
 
+    /** วาดฉากดาวและเส้นพื้นหลังของหน้าอัปเกรด */
     private void drawBackdrop(GraphicsContext gc) {
         gc.setFill(Color.color(0.02, 0.01, 0.05, 0.72));
         gc.fillRect(0, 0, 800, 720);
@@ -184,6 +190,7 @@ public final class UpgradeController {
         for (int y = 0; y < 720; y += 5) gc.fillRect(0, y, 800, 1);
     }
 
+    /** วาดหัวข้อด่าน คะแนน และชีวิต */
     private void drawHeader(GraphicsContext gc) {
         PixelFont.draw(gc, "STAGE " + (session.getStageNumber() - 1) + " CLEARED",
                 40, 35, 2, ScaledRoot.ION_CYAN);
@@ -197,6 +204,7 @@ public final class UpgradeController {
                 ScaledRoot.ION_CYAN);
     }
 
+    /** วาดการ์ดข้อเสนอพร้อมแอนิเมชันเลือกและสุ่มใหม่ */
     private void drawCards(GraphicsContext gc) {
         List<Upgrade> offers = selection.getOffers();
         double total = offers.size() * CARD_WIDTH + Math.max(0, offers.size() - 1) * CARD_GAP;
@@ -229,6 +237,7 @@ public final class UpgradeController {
         }
     }
 
+    /** วาดการ์ดอัปเกรดหนึ่งใบพร้อมชื่อและผลของอัปเกรด */
     private void drawCard(GraphicsContext gc, Upgrade upgrade, double x, double y, boolean selected) {
         Color accent = accent(upgrade.getType());
         double right = x + CARD_WIDTH;
@@ -293,6 +302,7 @@ public final class UpgradeController {
         }
     }
 
+    /** วาดไอคอนหัวใจแบบพิกเซลสำหรับอัปเกรดชีวิต */
     private void drawHeart(GraphicsContext gc, double cx, double cy, Color accent) {
         gc.setFill(accent);
         gc.fillRect(cx - 20, cy - 14, 16, 16);
@@ -318,6 +328,7 @@ public final class UpgradeController {
         if (!line.isEmpty()) PixelFont.draw(gc, line.toString(), x, y + row * 24, 1, accent);
     }
 
+    /** วาดอัปเกรดที่ได้รับแล้วและคำอธิบายเมื่อชี้ไอคอน */
     private void drawOwnedStrip(GraphicsContext gc) {
         Set<UpgradeType> owned = session.getAcquiredUpgrades();
         PixelFont.draw(gc, "YOUR UPGRADES", 440, 585, 1, ScaledRoot.FROST_WHITE);
@@ -347,6 +358,7 @@ public final class UpgradeController {
         }
     }
 
+    /** คืนชนิดอัปเกรดที่ตำแหน่งเมาส์ชี้อยู่ หรือ null */
     private UpgradeType ownedAt(double x, double y) {
         if (y < 606 || y > 638 || x < 440) return null;
         int index = (int) ((x - 440) / 39);
@@ -354,6 +366,7 @@ public final class UpgradeController {
         return index >= 0 && index < owned.size() ? owned.get(index) : null;
     }
 
+    /** วาดไอคอนขนาดเล็กของอัปเกรดที่ได้รับแล้ว */
     private void drawMiniIcon(GraphicsContext gc, UpgradeType type, double x, double y) {
         gc.setFill(accent(type));
         switch (type) {
@@ -382,6 +395,7 @@ public final class UpgradeController {
         }
     }
 
+    /** วาดปุ่มสุ่มใหม่และคำแนะนำปุ่มควบคุม */
     private void drawFooter(GraphicsContext gc) {
         boolean enabled = selection.isInputEnabled();
         gc.setFill(enabled && session.getRerollsRemaining() > 0
@@ -398,6 +412,7 @@ public final class UpgradeController {
         drawKeyHint(gc, 470, 670, "R", "REROLL");
     }
 
+    /** วาดป้ายคีย์และคำอธิบายการควบคุม */
     private void drawKeyHint(GraphicsContext gc, double x, double y, String key, String text) {
         gc.setFill(ScaledRoot.PANEL_PLUM);
         gc.fillRect(x, y, key.length() * 9 + 12, 24);
@@ -408,6 +423,7 @@ public final class UpgradeController {
         PixelFont.draw(gc, text, x + key.length() * 9 + 20, y + 8, 1, ScaledRoot.FROST_WHITE);
     }
 
+    /** คืนสีประจำประเภทอัปเกรดสำหรับไอคอนและกรอบการ์ด */
     private Color accent(UpgradeType type) {
         return switch (type) {
             case WIDE_PADDLE -> ScaledRoot.ION_CYAN;
@@ -419,6 +435,7 @@ public final class UpgradeController {
         };
     }
 
+    /** แสดงจำนวนชีวิตเป็นจำนวนเต็มหรือเลขทศนิยมหนึ่งตำแหน่ง */
     private String formatLives(double lives) {
         return lives % 1 == 0 ? Integer.toString((int) lives) : String.format("%.1f", lives);
     }

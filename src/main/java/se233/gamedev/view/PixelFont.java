@@ -53,6 +53,7 @@ public final class PixelFont {
             Map.entry(' ', glyph("00000", "00000", "00000", "00000", "00000", "00000", "00000"))
     );
 
+    /** ป้องกันการสร้างออบเจ็กต์จากคลาสวาดตัวอักษร */
     private PixelFont() {
     }
 
@@ -102,6 +103,7 @@ public final class PixelFont {
     }
 
     /** สร้างข้อมูลบิตของตัวอักษรหนึ่งตัวจากแถวกว้างห้าพิกเซล */
+    /** คืนรูปแบบแถวพิกเซลสำหรับตัวอักษรหนึ่งตัว */
     private static String[] glyph(String... rows) {
         return rows;
     }

@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
-/** JavaFX-free selection, intro gate, confirmation guard, and reroll timing. */
+/** จัดการการเลือกอัปเกรด เวลาแอนิเมชัน และเงื่อนไขการยืนยันโดยไม่พึ่ง JavaFX */
 public final class UpgradeSelectionState {
     public static final double INTRO_DURATION_SECONDS = 0.40;
     public static final double REROLL_DURATION_SECONDS = 0.25;
@@ -15,12 +15,12 @@ public final class UpgradeSelectionState {
     private double rerollElapsedSeconds;
     private boolean confirmed;
 
-    /** Creates selection state for the currently offered upgrades. */
+    /** สร้างสถานะการเลือกจากรายการอัปเกรดที่เสนอ */
     public UpgradeSelectionState(List<Upgrade> offers) {
         this.offers = distinctOffers(offers);
     }
 
-    /** Advances intro and shuffle animations using elapsed simulation time. */
+    /** อัปเดตเวลาการแสดงการ์ดและแอนิเมชันสุ่มใหม่ */
     public void update(double dtSeconds) {
         if (!Double.isFinite(dtSeconds) || dtSeconds < 0) {
             throw new IllegalArgumentException("Delta time must be finite and non-negative");
@@ -37,26 +37,26 @@ public final class UpgradeSelectionState {
         }
     }
 
-    /** Moves selection by one card, wrapping at both ends when input is enabled. */
+    /** เลื่อนการเลือกหนึ่งการ์ดและวนกลับเมื่อถึงขอบรายการ */
     public void move(int direction) {
         if (!isInputEnabled() || offers.isEmpty()) return;
         selectedIndex = Math.floorMod(selectedIndex + Integer.signum(direction), offers.size());
     }
 
-    /** Selects a specific card index when input is enabled. */
+    /** เลือกการ์ดตามดัชนีเมื่อเปิดรับการควบคุม */
     public void select(int index) {
         if (!isInputEnabled() || offers.isEmpty()) return;
         selectedIndex = Math.floorMod(index, offers.size());
     }
 
-    /** Confirms the highlighted upgrade once, or returns null when input is gated. */
+    /** ยืนยันอัปเกรดที่เลือกได้ครั้งเดียวเมื่อเปิดรับการควบคุม */
     public Upgrade confirm() {
         if (!isInputEnabled() || confirmed || offers.isEmpty()) return null;
         confirmed = true;
         return offers.get(selectedIndex);
     }
 
-    /** Begins a short reroll animation and installs distinct replacement offers at its end. */
+    /** เริ่มแอนิเมชันสุ่มใหม่และเตรียมข้อเสนอทดแทนที่ไม่ซ้ำกัน */
     public boolean reroll(List<Upgrade> replacements) {
         if (!isInputEnabled() || confirmed || pendingOffers != null) return false;
         pendingOffers = distinctOffers(replacements);
@@ -64,23 +64,29 @@ public final class UpgradeSelectionState {
         return true;
     }
 
+    /** คืนรายการอัปเกรดที่แสดงอยู่ */
     public List<Upgrade> getOffers() { return offers; }
+    /** คืนดัชนีการ์ดที่ถูกเลือก */
     public int getSelectedIndex() { return selectedIndex; }
+    /** ตรวจว่าสามารถรับคำสั่งจากผู้เล่นได้หรือไม่ */
     public boolean isInputEnabled() {
         return elapsedSeconds >= INTRO_DURATION_SECONDS && pendingOffers == null && !confirmed;
     }
-    /** Returns normalized progress through the card entrance animation. */
+    /** คืนความคืบหน้าการปรากฏของการ์ดในช่วงศูนย์ถึงหนึ่ง */
     public double getIntroProgress() {
         return Math.max(0, Math.min(1, elapsedSeconds / INTRO_DURATION_SECONDS));
     }
+    /** คืนเวลาที่ผ่านไปนับจากเริ่มแสดงหน้าจอ */
     public double getElapsedSeconds() { return elapsedSeconds; }
+    /** ตรวจว่ากำลังแสดงแอนิเมชันสุ่มข้อเสนอใหม่หรือไม่ */
     public boolean isRerolling() { return pendingOffers != null; }
-    /** Returns progress through the reroll animation from zero to one. */
+    /** คืนความคืบหน้าการสุ่มใหม่ในช่วงศูนย์ถึงหนึ่ง */
     public double getRerollProgress() {
         return pendingOffers == null ? 0
                 : Math.max(0, Math.min(1, rerollElapsedSeconds / REROLL_DURATION_SECONDS));
     }
 
+    /** ตรวจและคัดลอกรายการข้อเสนอ พร้อมปฏิเสธอัปเกรดที่ซ้ำกัน */
     private static List<Upgrade> distinctOffers(List<Upgrade> offered) {
         List<Upgrade> copy = List.copyOf(Objects.requireNonNull(offered, "offers"));
         if (new HashSet<>(copy).size() != copy.size()) {

@@ -15,17 +15,19 @@ import se233.gamedev.view.PixelFont;
 import se233.gamedev.view.PixelFonts;
 import se233.gamedev.view.ScaledRoot;
 
-/** Displays the final result and offers a way to start a new run. */
+/** แสดงผลลัพธ์สุดท้ายและเปิดทางให้เริ่มเกมรอบใหม่ */
 public final class GameOverController {
     private final GameSession session;
     private final Runnable onRestart;
     private final Canvas canvas = new Canvas(800, 720);
 
+    /** เตรียมข้อมูลผลลัพธ์และคำสั่งเริ่มรอบใหม่ */
     public GameOverController(GameSession session, Runnable onRestart) {
         this.session = session;
         this.onRestart = onRestart;
     }
 
+    /** สร้างหน้าจอสรุปผลและตั้งค่าปุ่มเริ่มรอบใหม่ */
     public Parent createView() {
         Pane root = new Pane(canvas);
         root.setPrefSize(800, 720);
@@ -47,6 +49,7 @@ public final class GameOverController {
         return root;
     }
 
+    /** วาดผลชนะหรือแพ้ คะแนนสุดท้าย และคำสั่งเล่นใหม่ */
     private void draw(GraphicsContext gc) {
         boolean won = session.getState() == GameState.VICTORY;
         gc.setImageSmoothing(false);
