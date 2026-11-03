@@ -11,11 +11,6 @@ public final class Meteor extends GameObject {
         super(centerX - WIDTH / 2, startY, WIDTH, HEIGHT);
     }
 
-    /** คืนความเร็วแนวดิ่งของอุกกาบาต */
-    public double getVelocityY() {
-        return FALL_SPEED;
-    }
-
     /** เคลื่อนอุกกาบาตลงตามเวลา โดย dt มีหน่วยเป็นวินาที */
     public void update(double dtSeconds) {
         if (dtSeconds < 0) throw new IllegalArgumentException("Delta time cannot be negative");
